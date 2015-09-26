@@ -143,7 +143,7 @@ entry %s'
                         return True
         return False
     
-    def parse_charts_list( self, page ):
+    def parse_charts_list( self, page, belgien=False ):
         """
         Handles the parsing process
         """
@@ -152,7 +152,11 @@ entry %s'
         wikicode = mwparser.parse( page.text )
         
         # Select the section "Singles"
-        singles_section = wikicode.get_sections( matches="Singles" )[0]
+        if belgien:
+            singles_section = wikicode.get_sections(
+                matches=belgien )[0].get_sections( matches="Singles" )[0]
+        else:
+            singles_section = wikicode.get_sections( matches="Singles" )[0]
         
         # Select the last occurence of template "Nummer-eins-Hits Zeile" in
         # "Singles"-section
@@ -203,7 +207,7 @@ entry %s'
             # Check if saved revid is unequal to current revid
             if( str( country.get( "Liste Revision" ).value ) !=
                 list_page.latest_revision_id ):
-            
+                    
                     country = self.update_overview( country, list_page )
             
         # If any param of any occurence of Template "/Eintrag" has changed,
@@ -230,7 +234,14 @@ entry %s'
         """
         
         # Parse linked charts list for the country
-        data = self.parse_charts_list( list_page )
+        if "Wallonien" in str( country.get( "Liste" ).value ):
+            belgien = "Wallonie"
+        elif "Flandern" in str( country.get( "Liste" ).value ):
+            belgien = "Flandern"
+        else:
+            belgien = None
+            
+        data = self.parse_charts_list( list_page, belgien )
                     
         # Update "Liste Revision" param
         country.get( "Liste Revision" ).value = str(
