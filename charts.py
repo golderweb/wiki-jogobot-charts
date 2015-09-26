@@ -88,7 +88,7 @@ class Charts:
                
         text = self.parse_overview( text )
 
-        if not self.save(text, page, self.summary):
+        if not self.save(text, page, self.summary, False, False):
             pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
 
     def load(self, page):
@@ -119,7 +119,7 @@ class Charts:
             pywikibot.showDiff(page.get(), text)
             pywikibot.output(u'Comment: %s' % comment)
             if not self.dry:
-                if pywikibot.input_yn(
+                if True or pywikibot.input_yn(
                         u'Do you want to accept these changes?',
                         default=False, automatic_quit=False):
                     try:
@@ -215,14 +215,6 @@ entry %s'
         # We need to convert mwparser-objects to string before saving
         return str( wikicode )
     
-    def open_overview( self ):
-        """
-        Opens the Charts-Overview-Page
-        """
-        with open( "/home/joni/GOLDERWEB/Daten/Projekte/05_Wikimedia/62_BOT/bot/charts/test-data.wiki", "r" ) as fr:  # noqa
-            
-            self.overview_text = fr.read()
-    
     def update_overview( self, country, list_page ):  # noqa
         """
         Updates the templates given in county using data from given list_page
@@ -302,13 +294,6 @@ entry %s'
         # Check if Interpret has changed
         if( data[2] != country.get( "Interpret" ).value ):
             country.get( "Interpret" ).value = data[2]
-    
-    def save_overview( self ):
-        """
-        Saves the current version of overview-text
-        """
-        with open( "/home/joni/GOLDERWEB/Daten/Projekte/05_Wikimedia/62_BOT/bot/charts/test-data.wiki", "w" ) as fw:  # noqa
-            fw.write( self.overview_text )
 
 
 def main(*args):
