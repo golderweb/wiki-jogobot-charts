@@ -65,6 +65,9 @@ class Charts:
         self.site = pywikibot.Site()
         self.summary = "Bot: Aktualisiere Übersichtsseite Nummer-eins-Hits"
         
+        # Set attribute to detect wether there was a real change
+        self.changed = None
+        
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
@@ -109,8 +112,8 @@ class Charts:
     def save(self, text, page, comment=None, minorEdit=True,
              botflag=True):
         """Update the given page with new text."""
-        # only save if something was changed
-        if text != page.get():
+        # only save if something was changed (and not just revision)
+        if text != page.get() and self.changed:
             # Show the title of the page we're working on.
             # Highlight the title in purple.
             pywikibot.output(u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
@@ -278,6 +281,7 @@ entry %s'
             country.get("Chartein").value ):
                 country.get("Chartein").value = date.strftime( "%d. %B"
                                                                ).lstrip( "0" )
+                self.changed = True
         
         # Check if param "Titel" is present
         if not country.has( "Titel" ):
@@ -286,6 +290,7 @@ entry %s'
         # Check if Titel has changed
         if( data[1] != country.get( "Titel" ).value ):
             country.get( "Titel" ).value = data[1]
+            self.changed = True
         
         # Check if param "Intepret" is present
         if not country.has( "Interpret" ):
@@ -294,6 +299,7 @@ entry %s'
         # Check if Interpret has changed
         if( data[2] != country.get( "Interpret" ).value ):
             country.get( "Interpret" ).value = data[2]
+            self.changed = True
 
 
 def main(*args):
