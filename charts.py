@@ -242,20 +242,18 @@ entry %s'
         country.get( "Liste Revision" ).value = str(
             list_page.latest_revision_id )
         
+        # If param Korrektur is present extract the value
+        if( country.has( "Korrektur" ) and
+            str( country.get( "Korrektur" ).value ).isnumeric() ):
+                days = int( str( country.get( "Korrektur" ).value ) )
+        else:
+            days = 0
+        
         # For some countries we have weeknumbers instead of dates
         if( isinstance( data[0], str ) ):
             
             # Slice year out of link destination
             year = int( list_page.title()[-5:-1] )
-            
-            # Check if we have a param "Wochentag", otherwise add
-            if not country.has( "Wochentag" ):
-                country.add( "Wochentag", "" )
-            
-            if( str( country.get( "Wochentag" ).value ).isnumeric() ):
-                days = int( str( country.get( "Wochentag" ).value ) )
-            else:
-                days = 0
             
             # Calculate date of monday in given week and add number of
             # days given in Template parameter "Wochentag" with monday
@@ -267,7 +265,7 @@ entry %s'
                      
         # Param Chartein contains a regular date
         else:
-            date = data[0]
+            date = data[0] + timedelta( days=days )
         
         # Check if param "Chartein" is present
         if not country.has( "Chartein" ):
