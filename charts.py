@@ -163,10 +163,14 @@ entry %s'
         
         # Select the last occurence of template "Nummer-eins-Hits Zeile" in
         # "Singles"-section
-        last_entry = singles_section.ifilter_templates(
+        entries = singles_section.filter_templates(
             matches="Nummer-eins-Hits Zeile" )
-        for last in last_entry:
-            pass
+        
+        # Check, wether we found some entries
+        if not entries:
+            raise ChartsListError( page.title() )
+        else:
+            last = entries[-1]
         
         # Detect weather we have a date or a weeknumber for Template Param
         # "Chartein"
@@ -252,14 +256,11 @@ entry %s'
         # For some countries we have weeknumbers instead of dates
         if( isinstance( data[0], str ) ):
             
-            # Slice year out of link destination
-            year = int( list_page.title()[-5:-1] )
+            
             
             # Calculate date of monday in given week and add number of
-            # days given in Template parameter "Wochentag" with monday
+            # days given in Template parameter "Korrektur" with monday
             # as day (zero)
-            # We need double conversion since wikicode could not be casted
-            # as int directly
             date = ( Week( year, int( data[0] ) ).monday() +
                      timedelta( days=days ) )
                      
@@ -270,7 +271,7 @@ entry %s'
         # Check if param "Chartein" is present
         if not country.has( "Chartein" ):
             try:
-                country.add( "Chartein", "", before="Wochentag" )
+                country.add( "Chartein", "", before="Korrektur" )
             except ValueError:
                 country.add( "Chartein", "" )
         
@@ -298,6 +299,41 @@ entry %s'
         if( data[2] != country.get( "Interpret" ).value ):
             country.get( "Interpret" ).value = data[2]
             self.changed = True
+
+
+class ChartsError( Exception ):
+    """
+    Base class for all Errors of Charts-Module
+    """
+    
+    def __init__( self, message=None ):
+        """
+        Handles Instantiation of ChartsError's
+        """
+        if not message:
+            self.message = "An Error occured while executing a Charts action"
+        else:
+            self.message = message
+    
+    def __str__( self ):
+        """
+        Output of error message
+        """
+        
+        return self.message
+
+
+class ChartsListError( ChartsError ):
+    """
+    Raised when given ChartsListPage does not contain valid entrys
+    """
+    
+    def __init__( self, givenPage ):
+        
+        message = "Given CharstListPage ('{given}') does not contain \
+valid entries".format( given=givenPage )
+        
+        super().__init__( message )
 
 
 def main(*args):
