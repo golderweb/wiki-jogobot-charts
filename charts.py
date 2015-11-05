@@ -91,7 +91,7 @@ class Charts:
                
         text = self.parse_overview( text )
 
-        if not self.save(text, page, self.summary, False, False):
+        if not self.save(text, page, self.summary, False):
             pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
 
     def load(self, page):
