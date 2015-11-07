@@ -46,7 +46,7 @@ class Charts:
     Class for handling chart lists
     """
 
-    def __init__( self, generator, dry ):
+    def __init__( self, generator, always, dry ):
         """
         Constructor.
 
@@ -60,6 +60,7 @@ class Charts:
 
         self.generator = generator
         self.dry = dry
+        self.always = always
 
         # Set the edit summary message
         self.site = pywikibot.Site()
@@ -119,7 +120,7 @@ class Charts:
             pywikibot.showDiff(page.get(), text)
             pywikibot.output(u'Comment: %s' % comment)
             if not self.dry:
-                if True or pywikibot.input_yn(
+                if self.always or pywikibot.input_yn(
                         u'Do you want to accept these changes?',
                         default=False, automatic_quit=False):
                     try:
@@ -416,10 +417,15 @@ def main(*args):
     # what would have been changed.
     dry = False
 
+    # If always is True, bot won't ask for confirmation of edit (automode)
+    always = False
+
     # Parse command line arguments
     for arg in local_args:
         if arg.startswith("-dry"):
             dry = True
+        elif arg.startswith("-always"):
+            always = True
         else:
             genFactory.handleArg(arg)
 
@@ -429,7 +435,7 @@ def main(*args):
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = Charts(gen, dry)
+        bot = Charts(gen, always, dry)
         bot.run()
     else:
         pywikibot.showHelp()
