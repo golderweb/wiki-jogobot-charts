@@ -45,7 +45,7 @@ class Charts:
     """
     Class for handling chart lists
     """
-    
+
     def __init__( self, generator, dry ):
         """
         Constructor.
@@ -57,17 +57,14 @@ class Charts:
                     what would have been changed.
         @type dry: boolean.
         """
-        
+
         self.generator = generator
         self.dry = dry
 
         # Set the edit summary message
         self.site = pywikibot.Site()
         self.summary = "Bot: Aktualisiere Übersichtsseite Nummer-eins-Hits"
-        
-        # Set attribute to detect wether there was a real change
-        self.changed = None
-        
+
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
@@ -75,7 +72,7 @@ class Charts:
         """Process each page from the generator."""
         for page in self.generator:
             self.treat(page)
-            
+
     def treat(self, page):
         """Load the given page, does some changes, and saves it."""
         text = self.load(page)
@@ -88,7 +85,7 @@ class Charts:
 
         # If you find out that you do not want to edit this page, just return.
         # Example: This puts the text 'Test' at the beginning of the page.
-               
+
         text = self.parse_overview( text )
 
         if not self.save(text, page, self.summary, False):
@@ -113,7 +110,7 @@ class Charts:
              botflag=True):
         """Update the given page with new text."""
         # only save if something was changed (and not just revision)
-        if text != page.get() and self.changed:
+        if text != page.get():
             # Show the title of the page we're working on.
             # Highlight the title in purple.
             pywikibot.output(u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
@@ -145,167 +142,228 @@ entry %s'
                     else:
                         return True
         return False
-    
-    def parse_charts_list( self, page, belgien=False ):
+
+    def parse_overview( self, text ):
         """
-        Handles the parsing process
+        Parses the given Charts-Overview-Page and returns the updated version
         """
-        
+
+        # Parse text with mwparser to get access to nodes
+        wikicode = mwparser.parse( text )
+
+        # Get mwparser.template objects for Template "/Eintrag"
+        for entry in wikicode.ifilter_templates( matches="/Eintrag" ):
+
+            # Maybe complete entry template
+            self.entry_template_complete( entry )
+
+            # Extract saved revision_id
+            ref_list_revid = int(str( entry.get( "Liste Revision" ).value ))
+
+            # Parse ref list
+            data = self.parse_ref_list( self.get_entry_ref_list( entry ),
+                                        ref_list_revid )
+
+            # Check that parsing was not short circuited
+            if data:
+                data = self.calculate_chartein( entry, data )
+
+                entry = self.entry_changed( entry, data )
+
+            #~ # Check if saved revid is unequal to current revid
+            #~ if( str( country.get( "Liste Revision" ).value ) !=
+                #~ list_page.latest_revision_id ):
+                    #~
+                    #~ country = self.update_overview( country, list_page )
+
+        # If any param of any occurence of Template "/Eintrag" has changed,
+        # Save new version
+        # We need to convert mwparser-objects to string before saving
+        return str( wikicode )
+
+    def parse_ref_list( self, ref_list_link , ref_list_revid):
+        """
+        Handles the parsing process of ref list
+        """
+
+        # Create Page-Object for Chartslist
+        ref_list_page = pywikibot.Page( self.site, ref_list_link.title )
+
+        # Short circuit if current revision is same than saved
+        if( ref_list_page.latest_revision_id ==  ref_list_revid ):
+            return False
+
+        # We need the year related to ref_list_link
+        year = int(ref_list_page.title()[-5:-1])
+
         # Parse charts list with mwparser
-        wikicode = mwparser.parse( page.text )
-        
+        wikicode = mwparser.parse( ref_list_page.text )
+
+        # Detect if we are on begian list
+        belgian = self.detect_belgium( ref_list_link )
+
         # Select the section "Singles"
-        if belgien:
+        # For belgian list we need to select subsection of country
+        if belgian:
             singles_section = wikicode.get_sections(
-                matches=belgien )[0].get_sections( matches="Singles" )[0]
+                matches=belgian )[0].get_sections( matches="Singles" )[0]
         else:
             singles_section = wikicode.get_sections( matches="Singles" )[0]
-        
+
         # Select the last occurence of template "Nummer-eins-Hits Zeile" in
         # "Singles"-section
         entries = singles_section.filter_templates(
             matches="Nummer-eins-Hits Zeile" )
-        
+
         # Check, wether we found some entries
         if not entries:
             raise ChartsListError( page.title() )
         else:
             last = entries[-1]
-        
+
         # Detect weather we have a date or a weeknumber for Template Param
         # "Chartein"
         if( last.get("Chartein").value.strip().isnumeric() ):
             chartein = last.get("Chartein").value.strip()
+
+            # Maybe there is a year correction for weeknumber
+            if last.has( "Jahr" ):
+                if last.get("Jahr").value.strip() == "+1":
+                    year = year + 1
+                elif last.get("Jahr").value.strip() == "-1":
+                    year = year - 1
+
+            chartein = ( year, chartein )
         else:
             chartein = datetime.strptime( last.get("Chartein").value.strip(),
                                           "%Y-%m-%d" )
-        
+
         title = last.get("Titel").value.strip()
         interpret = last.get("Interpret").value.strip()
-        
+
         # Return collected data as tuple
-        return ( chartein, title, interpret )
-    
-    def parse_overview( self, text ):
+        return ( chartein, title, interpret, ref_list_page.latest_revision_id )
+
+    def detect_belgium( self, ref_list_link ):
         """
-        Parses the given Charts-Overview-Page and returns the updated version
+        Detect wether current entry is on of the belgian (Belgien/Wallonien)
         """
-        
-        # Parse text with mwparser to get access to nodes
-        wikicode = mwparser.parse( text )
-            
-        # Get mwparser.template objects for Template "/Eintrag"
-        for country in wikicode.ifilter_templates( matches="/Eintrag" ):
-            
-            # Get mwparser.wikilink object
-            for link in country.get("Liste").value.ifilter_wikilinks():
-                # Create Page-Object for Chartslist
-                list_page = pywikibot.Page( self.site, link.title )
-                # Only use first wikilink in Template Param "Liste"
-                break
-            
-            # Check if we have a saved revid
-            if not country.has( "Liste Revision" ):
-                try:
-                    country.add( "Liste Revision", 0, before="Interpret" )
-                except ValueError:
-                    country.add( "Liste Revision", 0 )
-            
-            # Check if saved revid is unequal to current revid
-            if( str( country.get( "Liste Revision" ).value ) !=
-                list_page.latest_revision_id ):
-                    
-                    country = self.update_overview( country, list_page )
-            
-        # If any param of any occurence of Template "/Eintrag" has changed,
-        # Save new version
-        # We need to convert mwparser-objects to string before saving
-        return str( wikicode )
-    
+        # Parse linked charts list for the country
+        if "Wallonien" in str( ref_list_link.text ) \
+            or "Wallonien" in str( ref_list_link.title):
+                return "Wallonie"
+        elif "Flandern" in str( ref_list_link.text ) \
+            or "Flandern" in str( ref_list_link.title):
+                return "Flandern"
+        else:
+            return None
+
     def update_overview( self, country, list_page ):  # noqa
         """
         Updates the templates given in county using data from given list_page
-        
+
         @param    country    wikicode-object with Template for country
         @param    list_page  pywikibot-page-object for list-page
-        
+
         @returns wikicode-object with updated Template for country
         """
-        
-        # Parse linked charts list for the country
-        if "Wallonien" in str( country.get( "Liste" ).value ):
-            belgien = "Wallonie"
-        elif "Flandern" in str( country.get( "Liste" ).value ):
-            belgien = "Flandern"
-        else:
-            belgien = None
-            
-        data = self.parse_charts_list( list_page, belgien )
-                    
-        # Update "Liste Revision" param
-        country.get( "Liste Revision" ).value = str(
-            list_page.latest_revision_id )
-        
+
+        data = self.parse_charts_list( ref_list_link, belgien )
+
+    def get_entry_ref_list( self, entry ):
+        """
+        """
+        # Get mwparser.wikilink object
+        return next( entry.get("Liste").value.ifilter_wikilinks() )
+
+    def calculate_chartein( self, entry, data ):
+        """
+        Calculates the correct value for param chartein in entry
+        """
         # If param Korrektur is present extract the value
-        if( country.has( "Korrektur" ) and
-            str( country.get( "Korrektur" ).value ).isnumeric() ):
-                days = int( str( country.get( "Korrektur" ).value ) )
+        if( entry.has( "Korrektur" ) ):
+            # If Korrektur is (after striping) castable to int use it
+            try:
+                days = int( str( entry.get( "Korrektur" ).value ).strip() )
+            # Otherwise, if casting fails, ignore it
+            except ValueError:
+                days = 0
         else:
             days = 0
-        
+
         # For some countries we have weeknumbers instead of dates
-        if( isinstance( data[0], str ) ):
-            
-            
-            
+        if( isinstance( data[0], tuple ) ):
+
             # Calculate date of monday in given week and add number of
             # days given in Template parameter "Korrektur" with monday
             # as day (zero)
-            date = ( Week( year, int( data[0] ) ).monday() +
+            date = ( Week( data[0][0], int( data[0][1] ) ).monday() +
                      timedelta( days=days ) )
-                     
+
         # Param Chartein contains a regular date
         else:
             date = data[0] + timedelta( days=days )
-        
-        # Check if param "Chartein" is present
-        if not country.has( "Chartein" ):
-            try:
-                country.add( "Chartein", "", before="Korrektur" )
-            except ValueError:
-                country.add( "Chartein", "" )
-        
-        # Check if date has changed
-        if( date.strftime( "%d. %B" ).lstrip( "0" ) !=
-            country.get("Chartein").value ):
-                country.get("Chartein").value = date.strftime( "%d. %B"
-                                                               ).lstrip( "0" )
-                self.changed = True
-        
-        # Check if param "Titel" is present
-        if not country.has( "Titel" ):
-            country.add( "Titel", "", before="Chartein" )
-        
-        # Check if Titel has changed
-        if( data[1] != country.get( "Titel" ).value ):
-            country.get( "Titel" ).value = data[1]
-            self.changed = True
-        
-        # Check if param "Intepret" is present
-        if not country.has( "Interpret" ):
-            country.add( "Interpret", "", before="Titel" )
-        
-        # Check if Interpret has changed
-        if( data[2] != country.get( "Interpret" ).value ):
-            country.get( "Interpret" ).value = data[2]
-            self.changed = True
 
+        return (date,)+data[1:]
+
+    def entry_template_complete( self, entry ):
+        """
+        Checks wether given entry template is complete, otherwise adds missing
+        params
+        """
+
+        # Check if param "Chartein" is present
+        if not entry.has( "Chartein" ):
+            try:
+               entry.add( "Chartein", "", before="Korrektur" )
+            except ValueError:
+                entry.add( "Chartein", "" )
+
+        # Check if param "Titel" is present
+        if not entry.has( "Titel" ):
+            entry.add( "Titel", "", before="Chartein" )
+
+        # Check if param "Intepret" is present
+        if not entry.has( "Interpret" ):
+            entry.add( "Interpret", "", before="Titel" )
+
+        # Check if we have a saved revid
+        if not entry.has( "Liste Revision" ):
+            entry.add( "Liste Revision", 0, before="Interpret" )
+
+        return entry
+
+    def entry_changed( self, entry, data ):
+        """
+        Checks wether given entry has changed
+        """
+
+        # Check if date has changed
+        if( data[0].strftime( "%d. %B" ).lstrip( "0" ) !=
+            entry.get("Chartein").value ):
+
+                entry.get("Chartein").value = data[0].strftime( "%d. %B"
+                                                               ).lstrip( "0" )
+
+        # Check if Titel has changed
+        if( data[1] != entry.get( "Titel" ).value ):
+            entry.get( "Titel" ).value = data[1]
+
+        # Check if Interpret has changed
+        if( data[2] != entry.get( "Interpret" ).value ):
+            entry.get( "Interpret" ).value = data[2]
+
+        # Update "Liste Revision" param
+        entry.get( "Liste Revision" ).value = str(
+            data[3] )
+
+        return entry
 
 class ChartsError( Exception ):
     """
     Base class for all Errors of Charts-Module
     """
-    
+
     def __init__( self, message=None ):
         """
         Handles Instantiation of ChartsError's
@@ -314,12 +372,12 @@ class ChartsError( Exception ):
             self.message = "An Error occured while executing a Charts action"
         else:
             self.message = message
-    
+
     def __str__( self ):
         """
         Output of error message
         """
-        
+
         return self.message
 
 
@@ -327,12 +385,12 @@ class ChartsListError( ChartsError ):
     """
     Raised when given ChartsListPage does not contain valid entrys
     """
-    
+
     def __init__( self, givenPage ):
-        
+
         message = "Given CharstListPage ('{given}') does not contain \
 valid entries".format( given=givenPage )
-        
+
         super().__init__( message )
 
 
