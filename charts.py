@@ -186,7 +186,6 @@ entry %s'
         """
         Handles the parsing process of ref list
         """
-
         # Create Page-Object for Chartslist
         ref_list_page = pywikibot.Page( self.site, ref_list_link.title )
 
@@ -194,8 +193,10 @@ entry %s'
         if( ref_list_page.latest_revision_id ==  ref_list_revid ):
             return False
 
-        # We need the year related to ref_list_link
-        year = int(ref_list_page.title()[-5:-1])
+        # Try to find list related year
+        year = datetime.now().year
+        if str( year ) not in ref_list_page.title():
+            year = year - 1
 
         # Parse charts list with mwparser
         wikicode = mwparser.parse( ref_list_page.text )
@@ -275,7 +276,21 @@ entry %s'
         """
         """
         # Get mwparser.wikilink object
-        return next( entry.get("Liste").value.ifilter_wikilinks() )
+        link = next( entry.get("Liste").value.ifilter_wikilinks() )
+
+        year = datetime.now().year
+
+        old_link_title = link.title
+
+        # If year in link is lower then current year replace it
+        link.title = str(link.title).replace( str( year-1 ), str( year ) )
+
+        if ( pywikibot.Page( self.site, link.title).exists() ):
+            return link
+        else:
+            link.title = old_link_title
+            return link
+
 
     def calculate_chartein( self, entry, data ):
         """
