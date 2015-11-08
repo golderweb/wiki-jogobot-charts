@@ -241,7 +241,60 @@ entry %s'
                                           "%Y-%m-%d" )
 
         title = last.get("Titel").value.strip()
+
+        # Work with interpret value to add missing links
+        # Split them in words
         interpret = last.get("Interpret").value.strip()
+        interpret_words = interpret.split()
+
+        # Interpret name concatenating words
+        interpret_cat = ( "feat.", "&" )
+
+        # Create empty list for concatenated interpret names
+        interpreten_raw = [ " ", ]
+        indexes = list()
+        index = 0
+
+        # Reconcatenate interpret names
+        for word in interpret_words:
+
+            if word not in interpret_cat:
+                interpreten_raw[-1] = (interpreten_raw[-1] + " " + word).strip()
+
+                if index not in indexes and "[[" not in interpreten_raw[-1]:
+                    indexes.append( index )
+            else:
+                index += 2
+                interpreten_raw.append( word )
+                interpreten_raw.append( " " )
+
+        # Copy raw list to overwrite
+        interpreten = interpreten_raw
+
+        # Check if we have indexes with out links
+        if indexes:
+
+            print( ref_list_page.title() )
+
+            # Iterate over wikilinks of refpage and try to find related links
+            for wikilink in wikicode.ifilter_wikilinks():
+
+                # Iterate over interpret names to check wether wikilink matches
+                for index in indexes:
+
+                    if interpreten_raw[index] == wikilink.text \
+                        or interpreten_raw[index] == wikilink.title:
+
+                            interpreten_raw[index] = str( wikilink )
+                            indexes.remove( index )
+                            break
+
+                if not indexes:
+                    break
+
+            # Join the collected links
+            sep = " "
+            interpret = sep.join( interpreten )
 
         # Return collected data as tuple
         return ( chartein, title, interpret, ref_list_page.latest_revision_id )
