@@ -205,3 +205,25 @@ class CountryList():
         else:
             raise CountryListEntryError( "Template Parameter 'Chartein' is \
 missing!" )
+
+    def prepare_titel( self ):
+        """
+        Loads and prepares Titel of latest entry
+        """
+
+        # If self._titel_raw is not set, get it
+        if not self._titel_raw:
+            self.get_titel_value()
+
+        self.titel = self._titel_raw
+
+    def get_titel_value( self ):
+        """
+        Reads value of Titel parameter
+        If param is not present raise Error
+        """
+        if self.entry.has( "Titel" ):
+            self._titel_raw = self.entry.get("Titel").value.strip()
+        else:
+            raise CountryListEntryError( "Template Parameter 'Titel' is \
+missing!" )
