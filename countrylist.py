@@ -74,3 +74,17 @@ class CountryList():
         for attr in __attr:
             setattr( self, attr, None )
 
+    def parsing_needed( self, revid ):
+        """
+        Check if current revid of CountryList differs from given one
+
+        @param    int         Revid to check against
+
+        @return   True        Given revid differs from current revid
+                  False       Given revid is equal to current revid
+        """
+
+        if revid != self.page.latest_revision_id:
+            return True
+        else:
+            return False
