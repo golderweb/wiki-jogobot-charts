@@ -150,3 +150,58 @@ class CountryList():
         # Check if we have found something
         if not self.entry:
             raise CountryListError( self.page.title() )
+
+    def get_year_correction( self ):
+        """
+        Reads value of jahr parameter for correcting week numbers near to
+        year changes
+        """
+        # If param is present return correction, otherwise null
+        if self.entry.has( "Jahr" ):
+
+            # Read value of param
+            jahr = self.entry.get( "Jahr" ).strip()
+
+            if jahr == "+1":
+                return 1
+            elif jahr == "-1":
+                return -1
+
+        # None or wrong parameter value
+        return 0
+
+    def prepare_chartein( self ):
+        """
+        Checks wether self._chartein_raw is a date or a week number and
+        calculates related datetime object
+        """
+
+        # If self._chartein_raw is not set, get it
+        if not self._chartein_raw:
+            self.get_chartein_value()
+
+        # Detect weather we have a date or a weeknumber for Template Param
+        # "Chartein"
+        # Numeric string means week number
+        if( self._chartein_raw.isnumeric() ):
+
+            # Calculate date of monday in given week and add number of
+            # days given in Template parameter "Korrektur" with monday
+            # as day (zero)
+            self.chartein = ( Week( self.year + self.get_year_correction(),
+                                    int( self._chartein_raw ) ).monday() )
+        # Complete date string present
+        else:
+            self.chartein = datetime.strptime( self._chartein_raw,
+                                               "%Y-%m-%d" )
+
+    def get_chartein_value( self ):
+        """
+        Reads value of chartein parameter
+        If param is not present raise Error
+        """
+        if self.entry.has( "Chartein" ):
+            self._chartein_raw = self.entry.get("Chartein").value.strip()
+        else:
+            raise CountryListEntryError( "Template Parameter 'Chartein' is \
+missing!" )
