@@ -74,6 +74,9 @@ class CountryList():
         for attr in __attr:
             setattr( self, attr, None )
 
+        # Try to find year
+        self.find_year()
+
     def parsing_needed( self, revid ):
         """
         Check if current revid of CountryList differs from given one
@@ -88,3 +91,16 @@ class CountryList():
             return True
         else:
             return False
+
+    def find_year( self ):
+        """
+        Try to find the year related to CountryList
+        """
+        self.year = datetime.now().year
+
+        # Check if year is in page.title, if not try last year
+        if str( self.year ) not in self.page.title():
+            self.year -= 1
+        # If last year does not match, raise YearError
+        if str( self.year ) not in self.page.title():
+            raise CountryListYearError
