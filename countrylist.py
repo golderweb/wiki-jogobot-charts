@@ -38,20 +38,39 @@ class CountryList():
     """
     Handles charts list per country and year
     """
-    
+
     def __init__( self, wikilink ):
         """
         Generate new instance of class
-        
+
         Checks wether page given with country_list_link exists
+
+        @param    wikilink    Wikilink object by mwparser linking CountryList
+
+        @returns  self        Object representing CountryList
+                  False       if page does not exists
         """
-        
+
+        # Generate pywikibot site object
+        # @TODO: Maybe store it outside???
         self.site = pywikibot.Site()
-        
+
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
-        
+
+        # Generate pywikibot page object
         self.page = pywikibot.Page( self.site, wikilink.title )
-        
+
+        # Store given wikilink for page object
+        self.wikilink = wikilink
+
+        # Check if page exits
         if not self.page.exists():
             return False
+
+        # Initialise attributes
+        __attr = (  "wikicode", "entry", "chartein", "_chartein_raw",
+                    "_titel_raw", "titel", "interpret", "_interpret_raw" )
+        for attr in __attr:
+            setattr( self, attr, None )
+
