@@ -105,6 +105,22 @@ class CountryList():
         if str( self.year ) not in self.page.title():
             raise CountryListYearError
 
+    def parse( self ):
+        """
+        Handles the parsing process
+        """
+
+        # Parse page with mwparser
+        self.generate_wikicode()
+
+        # Select lastest entry
+        self.get_latest_entry()
+
+        # Prepare chartein, titel, interpret
+        self.prepare_chartein()
+        self.prepare_titel()
+        self.prepare_interpret()
+
     def detect_belgian( self ):
         """
         Detect wether current entry is on of the belgian (Belgien/Wallonien)
@@ -241,8 +257,6 @@ missing!" )
         # Split it in words
         words = self._interpret_raw.split()
 
-        print( words )
-
         # Interpret name separating words
         seps = ( "feat.", "&" )
 
@@ -296,8 +310,6 @@ missing!" )
                 # If worklist is empty, stop iterating over wikilinks
                 if not indexes:
                     break
-
-            print( parts )
 
             # Join the collected links
             sep = " "
