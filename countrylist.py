@@ -227,3 +227,93 @@ missing!" )
         else:
             raise CountryListEntryError( "Template Parameter 'Titel' is \
 missing!" )
+
+    def prepare_interpret( self ):
+        """
+        Loads and prepares Interpret of latest entry
+        """
+
+        # If self._interpret_raw is not set, get it
+        if not self._interpret_raw:
+            self.get_interpret_value()
+
+        # Work with interpret value to add missing links
+        # Split it in words
+        words = self._interpret_raw.split()
+
+        print( words )
+
+        # Interpret name separating words
+        seps = ( "feat.", "&" )
+
+        # Create empty list for concatenated interpret names
+        parts = [ " ", ]
+        # Another list for managing indexes which need to be worked on
+        indexes = list()
+        index = 0
+
+        # Reconcatenate interpret names
+        for word in words:
+
+            # Name parts
+            if word not in seps:
+                parts[-1] += (" " + word)
+
+                # Remove unnecessary whitespace
+                parts[-1] = parts[-1].strip()
+
+                # We only need to work on it, if no wikilink is present
+                if index not in indexes and "[[" not in parts[-1]:
+                    indexes.append( index )
+            else:
+                # Count up index 2 times ( Separator + next Name )
+                index += 2
+                parts.append( word )
+                parts.append( " " )
+
+        # If we have indexes with out links, search for links
+        if indexes:
+
+            # Iterate over wikilinks of refpage and try to find related links
+            for wikilink in self.wikicode.ifilter_wikilinks():
+
+                # Iterate over interpret names
+                for index in indexes:
+
+                    # Check wether wikilink matches
+                    if parts[index] == wikilink.text \
+                        or parts[index] == wikilink.title:
+
+                            # Overwrite name with complete wikilink
+                            parts[index] = str( wikilink )
+
+                            # Remove index from worklist
+                            indexes.remove( index )
+
+                            # Other indexes won't also match
+                            break
+
+                # If worklist is empty, stop iterating over wikilinks
+                if not indexes:
+                    break
+
+            print( parts )
+
+            # Join the collected links
+            sep = " "
+            self.interpret = sep.join( parts )
+
+        # Nothing to do, just use raw
+        else:
+            self.interpret = self._interpret_raw
+
+    def get_interpret_value( self ):
+        """
+        Reads value of Interpret parameter
+        If param is not present raise Error
+        """
+        if self.entry.has( "Interpret" ):
+            self._interpret_raw = self.entry.get("Interpret").value.strip()
+        else:
+            raise CountryListEntryError( "Template Parameter 'Interpret' is \
+missing!" )
