@@ -104,3 +104,49 @@ class CountryList():
         # If last year does not match, raise YearError
         if str( self.year ) not in self.page.title():
             raise CountryListYearError
+
+    def detect_belgian( self ):
+        """
+        Detect wether current entry is on of the belgian (Belgien/Wallonien)
+        """
+        # Check if begian province name is in link text or title
+        if "Wallonien" in str( self.wikilink.text ) \
+            or "Wallonien" in str( self.wikilink.title):
+                return "Wallonie"
+        elif "Flandern" in str( self.wikilink.text ) \
+            or "Flandern" in str( self.wikilink.title):
+                return "Flandern"
+        else:
+            return None
+
+    def generate_wikicode( self ):
+        """
+        Runs mwparser on page.text to get mwparser.objects
+        """
+
+        self.wikicode = mwparser.parse( self.page.text )
+
+    def get_latest_entry( self ):
+        """
+        Get latest list entry template object
+        """
+
+        # Select the section "Singles"
+        # For belgian list we need to select subsection of country
+        belgian = self.detect_belgian()
+
+        if belgian:
+            singles_section = self.wikicode.get_sections(
+                matches=belgian )[0].get_sections( matches="Singles" )[0]
+        else:
+            singles_section = self.wikicode.get_sections( matches="Singles" )[0]
+
+        # Select the last occurence of template "Nummer-eins-Hits Zeile" in
+        # "Singles"-section
+        for self.entry in singles_section.ifilter_templates(
+            matches="Nummer-eins-Hits Zeile" ):
+                pass
+
+        # Check if we have found something
+        if not self.entry:
+            raise CountryListError( self.page.title() )
