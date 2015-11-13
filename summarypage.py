@@ -115,6 +115,54 @@ class SummaryPageEntry():
         else:
             self.countrylist_revid = 0
 
+        def update_params( self ):
+        """
+        Updates values of Parameters of template
+        """
+
+        self.new_entry.Liste = self.countrylist_wikilink
+        self.new_entry.Liste_Revision = self.countrylist.page.latest_revision_id
+        self.new_entry.Interpret = self.countrylist.interpret
+        self.new_entry.Titel = self.countrylist.titel
+        self.new_entry.Chartein = self._corrected_chartein
+
+        if self.old_entry.Korrektur:
+            self.new_entry.Korrektur = self.old_entry.Korrektur
+        else:
+            self.new_entry.Korrektur = ""
+
+        if self.old_entry.Hervor:
+            self.new_entry.Hervor = self.old_entry.Hervor
+        else:
+            self.new_entry.Hervor = ""
+
+    def correct_chartein( self ):
+        """
+        Calulates the correct value of chartein, based on the chartein value
+        from countrylist entry and param Korrektur of summarypage entry
+        """
+        # If param Korrektur is present extract the value
+        if self.old_entry.Korrektur:
+            # If Korrektur is (after striping) castable to int use it
+            try:
+                days = int( str( self.old_entry.Korrektur ).strip() )
+            # Otherwise, if casting fails, ignore it
+            except ValueError:
+                days = 0
+        else:
+            days = 0
+
+        corrected = self.countrylist.chartein + timedelta( days=days )
+        self._corrected_chartein = corrected.strftime( "%d. %B" ).lstrip( "0" )
+
+    def is_write_needed( self ):
+        """
+        Detects wether writing of entry is needed and stores information in
+        Class-Attribute
+        """
+        type( self ).write_needed = ( ( self.old_entry != self.new_entry ) or \
+                                      type( self ).write_needed )
+
 
 class SummaryPageEntryTemplate():
     """
