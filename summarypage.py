@@ -31,7 +31,7 @@ from datetime import datetime, timedelta
 import pywikibot
 import mwparserfromhell as mwparser
 
-from countrylist import CountryList
+from countrylist import CountryList, CountryListError
 
 class SummaryPage():
     """
@@ -165,7 +165,7 @@ class SummaryPageEntry():
         else:
             self.countrylist_revid = 0
 
-        def update_params( self ):
+    def update_params( self ):
         """
         Updates values of Parameters of template
         """
@@ -325,3 +325,22 @@ class SummaryPageEntryTemplate():
 
         # If not returned True until now
         return False
+
+
+class SummaryPageError( Exception ):
+    """
+    Handles errors occuring in class SummaryPage
+    """
+    pass
+
+class SummaryPageEntryError( SummaryPageError ):
+    """
+    Handles errors occuring in class SummaryPageEntry
+    """
+    pass
+
+class SummaryPageEntryTemplateError( SummaryPageError ):
+    """
+    Handles errors occuring in class SummaryPageEntryTemplate
+    """
+    pass
