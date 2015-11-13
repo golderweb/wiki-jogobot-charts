@@ -40,6 +40,21 @@ class SummaryPage():
     pass
 
 
+class SummaryPageEntry():
+    """
+    Provides a generic wrapper for summary page entry template
+    """
+
+    write_needed = False
+
+    def __init__( self, entry ):
+        """
+        Constructor
+        """
+        self.old_entry = SummaryPageEntryTemplate( entry )
+        self.new_entry = SummaryPageEntryTemplate( )
+
+
 class SummaryPageEntryTemplate():
     """
     Interface class for mwparser.template to simply use template params as
