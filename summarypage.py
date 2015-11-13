@@ -38,3 +38,51 @@ class SummaryPage():
     Handles summary page related actions
     """
     pass
+
+
+class SummaryPageEntryTemplate():
+    """
+    Interface class for mwparser.template to simply use template params as
+    Properties
+    """
+
+    # Classatribute
+    params = ( "Liste", "Liste_Revision", "Interpret", "Titel", "Chartein",
+               "Korrektur", "Hervor" )
+
+    def __init__( self, template_obj=None ):
+        """
+        Creates Instance of Class for given mwparser.template object of
+        SummmaryPageEntry Template. If no object was given create empty one.
+
+        @param    template_obj    mw.parser.template   Object of
+                                  SummmaryPageEntry Template
+        """
+
+        # Check if object was given
+        if( template_obj ):
+
+            # Check if object has correct type
+            if isinstance( template_obj,
+                           mwparser.nodes.template.Template ):
+
+                self.template = template_obj;
+                self.__initial = False;
+
+            # Otherwise raise error
+            else:
+                raise SummaryPageEntryTemplateError( "Wrong type given" );
+
+        # Otherwise initialise template
+        else:
+            self.__initial_template()
+            self.__initial = True;
+
+    def __initial_template( self ):
+        """
+        Builds the initial template
+        """
+
+        self.template = next( mwparser.parse(
+"{{/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
+|Chartein=|Korrektur=|Hervor=}}" ).ifilter_templates() )
