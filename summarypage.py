@@ -111,3 +111,43 @@ class SummaryPageEntryTemplate():
 
         else:
             object.__setattr__(self, name, value)
+
+    def __ne__( self, other ):
+        """
+        Checks wether all Template param values except for Liste_Revision are
+        equal
+        """
+
+        # Detect which of the two was initialised (without)
+        # If none raise error
+        if( self.__initial ):
+            initial = self
+            cmpto = other
+        elif( other.__initial ):
+            initial = other
+            cmpto = self
+        else:
+            raise SummaryPageEntryTemplateError(
+"One of the compared instances must have been initial!" )
+
+        # Iterate over each param
+        for param in initial.template.params:
+
+            # Slice out only Param.name
+            param = param[:param.find("=")].strip()
+
+            # If param is missing, writing is needed
+            if not cmpto.template.has( param ):
+                return True
+
+            # Do not compare List Revisions (not just write about Revids)
+            if param == "Liste_Revision":
+                continue
+
+            # Compare other param values, if one unequal write is needed
+            if initial.template.get( param ).value.strip() != \
+                cmpto.template.get( param ).value.strip():
+                    return True
+
+        # If not returned True until now
+        return False
