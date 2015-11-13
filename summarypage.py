@@ -54,6 +54,67 @@ class SummaryPageEntry():
         self.old_entry = SummaryPageEntryTemplate( entry )
         self.new_entry = SummaryPageEntryTemplate( )
 
+    def parse( self ):
+        """
+        Handles parsing process of entry template
+        """
+
+        # Get wikilink to related countrylist
+        self.get_countrylist_wikilink()
+
+        # Get saved revision of related countrylist
+        self.get_countrylist_saved_revid()
+
+
+        # Get current year
+        current_year = datetime.now().year;
+
+        # Store old link.title
+        link_title = self.countrylist_wikilink.title
+
+        # If list is from last year, replace year
+        if (current_year - 1) in link_title:
+            self.countrylist_wikilink.title.replace( (current_year - 1), current_year )
+
+        # Try to get current years list
+        try:
+            self.countrylist = CountryList( self.countrylist_wikilink )
+
+            if self.countrylist:
+                self.countrylist.parse()
+
+        # Maybe fallback to last years list
+        except CountryListError:
+
+            self.countrylist_wikilink.title = link_title
+            self.countrylist = CountryList( self.countrylist_wikilink )
+
+            if self.countrylist:
+                self.countrylist.parse()
+            else:
+                raise SummaryPageEntryError( "CountryList does not exists!" )
+
+    def get_countrylist_wikilink( self ):
+        """
+        Load wikilink to related countrylist
+        """
+        if self.old_entry.Liste:
+            try:
+                self.countrylist_wikilink = next( self.old_entry.Liste.ifilter_wikilinks() )
+            except StopIteration:
+                raise SummaryPageEntryError( "Parameter Liste does not contain valid wikilink!")
+        else:
+            raise SummaryPageEntryError( "Parameter Liste is not present!")
+
+    def get_countrylist_saved_revid( self ):
+        """
+        Load saved revid of related countrylist if Param is present
+        """
+        if self.old_entry.Liste_Revision:
+            self.countrylist_revid = int( self.old_entry.Liste_Revision.strip())
+        else:
+            self.countrylist_revid = 0
+
 
 class SummaryPageEntryTemplate():
     """
