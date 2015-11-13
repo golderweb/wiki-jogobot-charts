@@ -54,6 +54,18 @@ class SummaryPageEntry():
         self.old_entry = SummaryPageEntryTemplate( entry )
         self.new_entry = SummaryPageEntryTemplate( )
 
+    def treat( self ):
+        """
+        Controls parsing/update-sequence of entry
+        """
+        self.parse()
+
+        self.correct_chartein()
+
+        self.update_params()
+
+        self.is_write_needed()
+
     def parse( self ):
         """
         Handles parsing process of entry template
