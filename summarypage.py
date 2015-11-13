@@ -37,7 +37,32 @@ class SummaryPage():
     """
     Handles summary page related actions
     """
-    pass
+
+    def __init__( self, text ):
+        """
+        Create Instance
+        """
+
+        # Parse Text with mwparser
+        self.wikicode = mwparser.parse( text )
+
+    def treat( self ):
+        """
+        Handles parsing/editing of text
+        """
+
+        # Get mwparser.template objects for Template "/Eintrag"
+        for entry in self.wikicode.filter_templates( matches="/Eintrag" ) :
+
+            # Instantiate SummaryPageEntry-object
+            summarypageentry = SummaryPageEntry( entry )
+            # Treat SummaryPageEntry-object
+            summarypageentry.treat()
+
+            # Get result
+            # We need to replace origninal entry since objectid changes due to
+            # recreation of template object and reassignment won't be reflected
+            self.wikicode.replace( entry, summarypageentry.new_entry.template )
 
 
 class SummaryPageEntry():
