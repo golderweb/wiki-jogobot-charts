@@ -64,6 +64,19 @@ class SummaryPage():
             # recreation of template object and reassignment won't be reflected
             self.wikicode.replace( entry, summarypageentry.new_entry.template )
 
+    def get_new_text( self ):
+        """
+        If writing page is needed, return new text, otherwise false
+        """
+
+        # Get information wether writing is needed from class attribute
+        if SummaryPageEntry.write_needed:
+
+            # Convert wikicode back to string and return
+            return str( self.wikicode )
+
+        return False
+
 
 class SummaryPageEntry():
     """
