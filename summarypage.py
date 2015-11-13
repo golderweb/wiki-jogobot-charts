@@ -86,3 +86,28 @@ class SummaryPageEntryTemplate():
         self.template = next( mwparser.parse(
 "{{/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
 |Chartein=|Korrektur=|Hervor=}}" ).ifilter_templates() )
+
+    def __getattr__( self, name ):
+        """
+        Special getter for template params
+        """
+        if name in type(self).params:
+
+            if( self.template.has( name ) ):
+                return self.template.get( name ).value
+            else:
+                return False
+
+        else:
+            raise AttributeError
+
+    def __setattr__( self, name, value ):
+        """
+        Special setter for template params
+        """
+        if name in type(self).params:
+
+            self.__dict__[ 'template' ].add( name, value )
+
+        else:
+            object.__setattr__(self, name, value)
