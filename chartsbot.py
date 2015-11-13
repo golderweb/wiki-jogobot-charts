@@ -22,17 +22,27 @@
 #
 #
 """
-Provides a class for handling chart lists
+Bot which automatically updates a ChartsSummaryPage like
+[[Portal:Charts_und_Popmusik/Aktuelle_Nummer-eins-Hits]] by reading linked
+CountryLists
+
+The following parameters are supported:
+
+&params;
+
+-always           If given, request for confirmation of edit is short circuited
+                  Use for unattended run
 """
 
-from datetime import datetime, timedelta
-import locale
 
-from isoweek import Week
+import locale
 
 import pywikibot
 from pywikibot import pagegenerators
+from pywikibot.bot import Bot
 import mwparserfromhell as mwparser
+
+from summarypage import SummaryPage
 
 # This is required for the text that is shown when you run this script
 # with the parameter -help.
@@ -41,25 +51,26 @@ docuReplacements = {
 }
 
 
-class Charts:
+class ChartsBot( ):
     """
-    Class for handling chart lists
+    Bot which automatically updates a ChartsSummaryPage like
+    [[Portal:Charts_und_Popmusik/Aktuelle_Nummer-eins-Hits]] by reading linked
+    CountryListsAn incomplete sample bot.
     """
 
-    def __init__( self, generator, always, dry ):
+    def __init__( self, generator, always ):
         """
         Constructor.
 
-        @param generator: The page generator that determines on which pages
-                              to work.
-        @type generator: generator.
-        @param dry: If True, doesn't do any real changes, but only shows
-                    what would have been changed.
-        @type dry: boolean.
+        @param generator: the page generator that determines on which pages
+            to work
+        @type generator: generator
+        @param always: if True, request for confirmation of edit is short
+                        circuited. Use for unattended run
+        @type always: bool
         """
 
         self.generator = generator
-        self.dry = dry
         self.always = always
 
         # Set the edit summary message
@@ -84,10 +95,13 @@ class Charts:
         # NOTE: Here you can modify the text in whatever way you want. #
         ################################################################
 
-        # If you find out that you do not want to edit this page, just return.
-        # Example: This puts the text 'Test' at the beginning of the page.
+        # Initialise and treat SummaryPageWorker
+        sumpage = SummaryPage( text )
+        sumpage.treat()
 
-        text = self.parse_overview( text )
+        # Check if editing is needed and if so get new text
+        if sumpage.get_new_text():
+            text = sumpage.get_new_text()
 
         if not self.save(text, page, self.summary, False):
             pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
@@ -481,18 +495,13 @@ def main(*args):
     genFactory = pagegenerators.GeneratorFactory()
     # The generator gives the pages that should be worked upon.
     gen = None
-    # If dry is True, doesn't do any real changes, but only show
-    # what would have been changed.
-    dry = False
 
     # If always is True, bot won't ask for confirmation of edit (automode)
     always = False
 
     # Parse command line arguments
     for arg in local_args:
-        if arg.startswith("-dry"):
-            dry = True
-        elif arg.startswith("-always"):
+        if arg.startswith("-always"):
             always = True
         else:
             genFactory.handleArg(arg)
@@ -503,7 +512,7 @@ def main(*args):
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = Charts(gen, always, dry)
+        bot = ChartsBot(gen, always)
         bot.run()
     else:
         pywikibot.showHelp()
