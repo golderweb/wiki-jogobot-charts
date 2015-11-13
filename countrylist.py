@@ -329,3 +329,16 @@ missing!" )
         else:
             raise CountryListEntryError( "Template Parameter 'Interpret' is \
 missing!" )
+
+
+class CountryListError( Exception ):
+    """
+    Handles errors occuring in class CountryList
+    """
+    pass
+
+class CountryListEntryError( CountryListError );
+    """
+    Handles errors occuring in class CountryList related to entrys
+    """
+    pass
