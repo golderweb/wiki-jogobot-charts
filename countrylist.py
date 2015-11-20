@@ -157,9 +157,17 @@ class CountryList():
         else:
             singles_section = self.wikicode.get_sections( matches="Singles" )[0]
 
+        # Since we have multiple categories in some countrys we need
+        # to select the first wrapping template
+        try:
+            wrapping_template = next( singles_section.ifilter_templates(
+                matches="Nummer-eins-Hits" ) )
+        except StopIteration:
+                raise CountryListError( "Wrapping template is missing!")
+
         # Select the last occurence of template "Nummer-eins-Hits Zeile" in
-        # "Singles"-section
-        for self.entry in singles_section.ifilter_templates(
+        # Wrapper-template
+        for self.entry in wrapping_template.get("Inhalt").value.ifilter_templates(
             matches="Nummer-eins-Hits Zeile" ):
                 pass
 
