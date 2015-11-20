@@ -258,7 +258,7 @@ class SummaryPageEntryTemplate():
         """
 
         self.template = next( mwparser.parse(
-"{{/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
+"{{Portal:Charts und Popmusik/Aktuelle Nummer-eins-Hits/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
 |Chartein=|Korrektur=|Hervor=}}" ).ifilter_templates() )
 
     def __getattr__( self, name ):
