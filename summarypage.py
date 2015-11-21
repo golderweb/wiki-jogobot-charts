@@ -102,7 +102,6 @@ class SummaryPageEntry():
         # Check if parsing country list is needed
         if( self.countrylist.is_parsing_needed( self.countrylist_revid )):
 
-            self.countrylist.parse()
             self.correct_chartein()
 
             self.update_params()
@@ -135,14 +134,22 @@ class SummaryPageEntry():
         try:
             self.countrylist = CountryList( self.countrylist_wikilink )
 
+            if( self.countrylist and \
+                self.countrylist.is_parsing_needed( self.countrylist_revid )):
+                    self.countrylist.parse()
+
         # Maybe fallback to last years list
         except CountryListError:
 
             self.countrylist_wikilink.title = link_title
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-        if not self.countrylist:
-            raise SummaryPageEntryError( "CountryList does not exists!" )
+            if( self.countrylist and \
+                self.countrylist.is_parsing_needed( self.countrylist_revid )):
+                    self.countrylist.parse()
+
+            if not self.countrylist:
+                raise SummaryPageEntryError( "CountryList does not exists!" )
 
     def get_countrylist_wikilink( self ):
         """
