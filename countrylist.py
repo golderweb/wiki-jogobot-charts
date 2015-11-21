@@ -77,7 +77,7 @@ class CountryList():
         # Try to find year
         self.find_year()
 
-    def parsing_needed( self, revid ):
+    def is_parsing_needed( self, revid ):
         """
         Check if current revid of CountryList differs from given one
 
