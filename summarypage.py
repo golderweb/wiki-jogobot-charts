@@ -62,7 +62,7 @@ class SummaryPage():
             # Get result
             # We need to replace origninal entry since objectid changes due to
             # recreation of template object and reassignment won't be reflected
-            self.wikicode.replace( entry, summarypageentry.new_entry.template )
+            self.wikicode.replace( entry, summarypageentry.get_entry().template )
 
     def get_new_text( self ):
         """
@@ -96,17 +96,22 @@ class SummaryPageEntry():
         """
         Controls parsing/update-sequence of entry
         """
-        self.parse()
+        # Get CountryList-Object
+        self.get_countrylist()
 
-        self.correct_chartein()
+        # Check if parsing country list is needed
+        if( self.countrylist.is_parsing_needed( self.countrylist_revid )):
 
-        self.update_params()
+            self.countrylist.parse()
+            self.correct_chartein()
+
+            self.update_params()
 
         self.is_write_needed()
 
-    def parse( self ):
+    def get_countrylist( self ):
         """
-        Handles parsing process of entry template
+        Get the CountryList-Object for current entry
         """
 
         # Get wikilink to related countrylist
@@ -130,19 +135,14 @@ class SummaryPageEntry():
         try:
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if self.countrylist:
-                self.countrylist.parse()
-
         # Maybe fallback to last years list
         except CountryListError:
 
             self.countrylist_wikilink.title = link_title
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if self.countrylist:
-                self.countrylist.parse()
-            else:
-                raise SummaryPageEntryError( "CountryList does not exists!" )
+        if not self.countrylist:
+            raise SummaryPageEntryError( "CountryList does not exists!" )
 
     def get_countrylist_wikilink( self ):
         """
@@ -212,6 +212,16 @@ class SummaryPageEntry():
         """
         type( self ).write_needed = ( ( self.old_entry != self.new_entry ) or \
                                       type( self ).write_needed )
+
+    def get_entry( self ):
+        """
+        Returns the new entry if CountryList was parsed otherwise returns the
+        old one
+        """
+        if( self.countrylist.is_parsing_needed( self.countrylist_revid )):
+            return self.new_entry
+        else:
+            return self.old_entry
 
 
 class SummaryPageEntryTemplate():
