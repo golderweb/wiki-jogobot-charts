@@ -25,10 +25,9 @@
 Provides classes for handling Charts summary page
 """
 
-import locale
 from datetime import datetime, timedelta
 
-import pywikibot
+# import pywikibot
 import mwparserfromhell as mwparser
 
 from countrylist import CountryList, CountryListError
