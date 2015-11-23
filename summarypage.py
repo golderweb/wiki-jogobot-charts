@@ -100,7 +100,7 @@ class SummaryPageEntry():
         self.get_countrylist()
 
         # Check if parsing country list is needed
-        if( self.countrylist.is_parsing_needed( self.countrylist_revid )):
+        if( self.countrylist.parsed):
 
             self.correct_chartein()
 
@@ -220,7 +220,8 @@ class SummaryPageEntry():
         Detects wether writing of entry is needed and stores information in
         Class-Attribute
         """
-        type( self ).write_needed = ( ( self.old_entry != self.new_entry ) or
+        type( self ).write_needed = ( ( self.old_entry != self.new_entry ) and
+                                      self.countrylist.parsed or
                                       type( self ).write_needed )
 
     def get_entry( self ):
@@ -228,7 +229,7 @@ class SummaryPageEntry():
         Returns the new entry if CountryList was parsed otherwise returns the
         old one
         """
-        if( self.countrylist.is_parsing_needed( self.countrylist_revid )):
+        if( self.countrylist.parsed):
             return self.new_entry
         else:
             return self.old_entry

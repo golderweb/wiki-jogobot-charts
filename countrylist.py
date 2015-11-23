@@ -74,6 +74,8 @@ class CountryList():
         for attr in __attr:
             setattr( self, attr, None )
 
+        self.parsed = False
+
         # Try to find year
         self.find_year()
 
@@ -120,6 +122,9 @@ class CountryList():
         self.prepare_chartein()
         self.prepare_titel()
         self.prepare_interpret()
+
+        # For easy detecting wether we have parsed self
+        self.parsed = True
 
     def detect_belgian( self ):
         """
