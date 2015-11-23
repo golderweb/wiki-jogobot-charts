@@ -103,7 +103,7 @@ class CountryList():
             self.year -= 1
         # If last year does not match, raise YearError
         if str( self.year ) not in self.page.title():
-            raise CountryListYearError
+            raise CountryListError( "CountryList year is errorneous!" )
 
     def parse( self ):
         """
