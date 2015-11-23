@@ -39,8 +39,6 @@ import locale
 
 import pywikibot
 from pywikibot import pagegenerators
-from pywikibot.bot import Bot
-import mwparserfromhell as mwparser
 
 from summarypage import SummaryPage
 

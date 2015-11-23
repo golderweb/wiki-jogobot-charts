@@ -25,13 +25,13 @@
 Provides classes for handling Charts summary page
 """
 
-import locale
 from datetime import datetime, timedelta
 
-import pywikibot
+# import pywikibot
 import mwparserfromhell as mwparser
 
 from countrylist import CountryList, CountryListError
+
 
 class SummaryPage():
     """
@@ -52,7 +52,7 @@ class SummaryPage():
         """
 
         # Get mwparser.template objects for Template "/Eintrag"
-        for entry in self.wikicode.filter_templates( matches="/Eintrag" ) :
+        for entry in self.wikicode.filter_templates( matches="/Eintrag" ):
 
             # Instantiate SummaryPageEntry-object
             summarypageentry = SummaryPageEntry( entry )
@@ -62,7 +62,7 @@ class SummaryPage():
             # Get result
             # We need to replace origninal entry since objectid changes due to
             # recreation of template object and reassignment won't be reflected
-            self.wikicode.replace( entry, summarypageentry.get_entry().template )
+            self.wikicode.replace(entry, summarypageentry.get_entry().template)
 
     def get_new_text( self ):
         """
@@ -119,22 +119,22 @@ class SummaryPageEntry():
         # Get saved revision of related countrylist
         self.get_countrylist_saved_revid()
 
-
         # Get current year
-        current_year = datetime.now().year;
+        current_year = datetime.now().year
 
         # Store old link.title
         link_title = self.countrylist_wikilink.title
 
         # If list is from last year, replace year
         if (current_year - 1) in link_title:
-            self.countrylist_wikilink.title.replace( (current_year - 1), current_year )
+            self.countrylist_wikilink.title.replace( (current_year - 1),
+                                                     current_year )
 
         # Try to get current years list
         try:
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if( self.countrylist and \
+            if( self.countrylist and
                 self.countrylist.is_parsing_needed( self.countrylist_revid )):
                     self.countrylist.parse()
 
@@ -144,7 +144,7 @@ class SummaryPageEntry():
             self.countrylist_wikilink.title = link_title
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if( self.countrylist and \
+            if( self.countrylist and
                 self.countrylist.is_parsing_needed( self.countrylist_revid )):
                     self.countrylist.parse()
 
@@ -157,9 +157,11 @@ class SummaryPageEntry():
         """
         if self.old_entry.Liste:
             try:
-                self.countrylist_wikilink = next( self.old_entry.Liste.ifilter_wikilinks() )
+                self.countrylist_wikilink = next(
+                    self.old_entry.Liste.ifilter_wikilinks() )
             except StopIteration:
-                raise SummaryPageEntryError( "Parameter Liste does not contain valid wikilink!")
+                raise SummaryPageEntryError(
+                    "Parameter Liste does not contain valid wikilink!" )
         else:
             raise SummaryPageEntryError( "Parameter Liste is not present!")
 
@@ -168,7 +170,7 @@ class SummaryPageEntry():
         Load saved revid of related countrylist if Param is present
         """
         if self.old_entry.Liste_Revision:
-            self.countrylist_revid = int( self.old_entry.Liste_Revision.strip())
+            self.countrylist_revid = int(self.old_entry.Liste_Revision.strip())
         else:
             self.countrylist_revid = 0
 
@@ -178,7 +180,8 @@ class SummaryPageEntry():
         """
 
         self.new_entry.Liste = self.countrylist_wikilink
-        self.new_entry.Liste_Revision = self.countrylist.page.latest_revision_id
+        self.new_entry.Liste_Revision = \
+            self.countrylist.page.latest_revision_id
         self.new_entry.Interpret = self.countrylist.interpret
         self.new_entry.Titel = self.countrylist.titel
         self.new_entry.Chartein = self._corrected_chartein
@@ -217,7 +220,7 @@ class SummaryPageEntry():
         Detects wether writing of entry is needed and stores information in
         Class-Attribute
         """
-        type( self ).write_needed = ( ( self.old_entry != self.new_entry ) or \
+        type( self ).write_needed = ( ( self.old_entry != self.new_entry ) or
                                       type( self ).write_needed )
 
     def get_entry( self ):
@@ -257,25 +260,25 @@ class SummaryPageEntryTemplate():
             if isinstance( template_obj,
                            mwparser.nodes.template.Template ):
 
-                self.template = template_obj;
-                self.__initial = False;
+                self.template = template_obj
+                self.__initial = False
 
             # Otherwise raise error
             else:
-                raise SummaryPageEntryTemplateError( "Wrong type given" );
+                raise SummaryPageEntryTemplateError( "Wrong type given" )
 
         # Otherwise initialise template
         else:
             self.__initial_template()
-            self.__initial = True;
+            self.__initial = True
 
     def __initial_template( self ):
         """
         Builds the initial template
         """
 
-        self.template = next( mwparser.parse(
-"{{Portal:Charts und Popmusik/Aktuelle Nummer-eins-Hits/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
+        self.template = next( mwparser.parse( "{{Portal:Charts und Popmusik/\
+Aktuelle Nummer-eins-Hits/Eintrag|Liste=|Liste_Revision=|Interpret=|Titel=NN\
 |Chartein=|Korrektur=|Hervor=}}" ).ifilter_templates() )
 
     def __getattr__( self, name ):
@@ -319,7 +322,7 @@ class SummaryPageEntryTemplate():
             cmpto = self
         else:
             raise SummaryPageEntryTemplateError(
-"One of the compared instances must have been initial!" )
+                "One of the compared instances must have been initial!" )
 
         # Iterate over each param
         for param in initial.template.params:
@@ -336,8 +339,8 @@ class SummaryPageEntryTemplate():
                 continue
 
             # Compare other param values, if one unequal write is needed
-            if initial.template.get( param ).value.strip() != \
-                cmpto.template.get( param ).value.strip():
+            if( initial.template.get( param ).value.strip() !=
+                cmpto.template.get( param ).value.strip() ):
                     return True
 
         # If not returned True until now
@@ -350,11 +353,13 @@ class SummaryPageError( Exception ):
     """
     pass
 
+
 class SummaryPageEntryError( SummaryPageError ):
     """
     Handles errors occuring in class SummaryPageEntry
     """
     pass
+
 
 class SummaryPageEntryTemplateError( SummaryPageError ):
     """
