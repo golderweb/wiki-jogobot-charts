@@ -126,11 +126,11 @@ class CountryList():
         Detect wether current entry is on of the belgian (Belgien/Wallonien)
         """
         # Check if begian province name is in link text or title
-        if "Wallonien" in str( self.wikilink.text ) \
-            or "Wallonien" in str( self.wikilink.title):
+        if( "Wallonien" in str( self.wikilink.text ) or
+            "Wallonien" in str( self.wikilink.title) ):
                 return "Wallonie"
-        elif "Flandern" in str( self.wikilink.text ) \
-            or "Flandern" in str( self.wikilink.title):
+        elif( "Flandern" in str( self.wikilink.text ) or
+              "Flandern" in str( self.wikilink.title) ):
                 return "Flandern"
         else:
             return None
@@ -155,21 +155,21 @@ class CountryList():
             singles_section = self.wikicode.get_sections(
                 matches=belgian )[0].get_sections( matches="Singles" )[0]
         else:
-            singles_section = self.wikicode.get_sections( matches="Singles" )[0]
+            singles_section = self.wikicode.get_sections(matches="Singles")[0]
 
         # Since we have multiple categories in some countrys we need
         # to select the first wrapping template
         try:
-            wrapping_template = next( singles_section.ifilter_templates(
+            wrapping = next( singles_section.ifilter_templates(
                 matches="Nummer-eins-Hits" ) )
         except StopIteration:
                 raise CountryListError( "Wrapping template is missing!")
 
         # Select the last occurence of template "Nummer-eins-Hits Zeile" in
         # Wrapper-template
-        for self.entry in wrapping_template.get("Inhalt").value.ifilter_templates(
-            matches="Nummer-eins-Hits Zeile" ):
-                pass
+        for self.entry in wrapping.get("Inhalt").value.ifilter_templates(
+                matches="Nummer-eins-Hits Zeile" ):
+                    pass
 
         # Check if we have found something
         if not self.entry:
@@ -303,8 +303,8 @@ missing!" )
                 for index in indexes:
 
                     # Check wether wikilink matches
-                    if parts[index] == wikilink.text \
-                        or parts[index] == wikilink.title:
+                    if( parts[index] == wikilink.text or
+                        parts[index] == wikilink.title ):
 
                             # Overwrite name with complete wikilink
                             parts[index] = str( wikilink )
@@ -344,6 +344,7 @@ class CountryListError( Exception ):
     Handles errors occuring in class CountryList
     """
     pass
+
 
 class CountryListEntryError( CountryListError ):
     """
