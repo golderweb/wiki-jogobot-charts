@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8  -*-
 #
-#  charts.py
+#  chartsbot.py
+#
+#  original version by:
+#
+#  (C) Pywikibot team, 2006-2014 as basic.py
+#
+#  Distributed under the terms of the MIT license.
+#
+#  modified by:
 #
 #  Copyright 2015 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
 #
