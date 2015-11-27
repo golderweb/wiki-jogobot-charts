@@ -132,13 +132,17 @@ class ChartsBot( ):
         """Update the given page with new text."""
         # only save if something was changed (and not just revision)
         if text != page.get():
-            # Show the title of the page we're working on.
-            # Highlight the title in purple.
-            pywikibot.output(u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
-                             % page.title())
-            # show what was changed
-            pywikibot.showDiff(page.get(), text)
-            pywikibot.output(u'Comment: %s' % comment)
+
+            # Show diff only in interactive mode
+            if not self.always:
+
+                # Show the title of the page we're working on.
+                # Highlight the title in purple.
+                pywikibot.output( u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
+                                  % page.title())
+                # show what was changed
+                pywikibot.showDiff(page.get(), text)
+                pywikibot.output(u'Comment: %s' % comment)
 
             if self.always or pywikibot.input_yn(
                     u'Do you want to accept these changes?',
