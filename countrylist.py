@@ -112,6 +112,9 @@ class CountryList():
         Handles the parsing process
         """
 
+        # Set revid
+        self.revid = self.page.latest_revision_id
+
         # Parse page with mwparser
         self.generate_wikicode()
 
@@ -356,3 +359,50 @@ class CountryListEntryError( CountryListError ):
     Handles errors occuring in class CountryList related to entrys
     """
     pass
+
+
+class CountryListUnitTest():
+    """
+    Defines Test-Functions for CountryList-Module
+    """
+
+    testcases = ( { "Link": mwparser.nodes.Wikilink( "Benutzer:JogoBot/Charts/Tests/Liste der Nummer-eins-Hits in Frankreich (2015)" ),  # noqa
+                    "revid": 148453827,
+                    "interpret": "[[Adele (Sängerin)|Adele]]",
+                    "titel": "[[Hello (Adele-Lied)|Hello]]",
+                    "chartein": datetime( 2015, 10, 23 ) },
+                  { "Link": mwparser.nodes.Wikilink( "Benutzer:JogoBot/Charts/Tests/Liste der Nummer-eins-Hits in Belgien (2015)", "Wallonien"),  # noqa
+                    "revid": 148455281,
+                    "interpret": "[[Nicky Jam]] & [[Enrique Iglesias (Sänger)|Enrique Iglesias]]",  # noqa
+                    "titel": "El perdón",
+                    "chartein": datetime( 2015, 9, 12 ) } )
+
+    def __init__( self ):
+        pass
+
+    def treat( self ):
+
+        for case in type(self).testcases:
+
+            self.countrylist = CountryList( case["Link"] )
+
+            if( self.countrylist.is_parsing_needed( case["revid"] ) or not
+                self.countrylist.is_parsing_needed( case["revid"] + 1 ) ):
+                    raise Exception(
+                        "CountryList.is_parsing_needed() does not work!" )
+
+            self.countrylist.parse()
+
+            for key in case:
+
+                if key == "Link":
+                    continue
+
+                if not case[key] == getattr(self.countrylist, key ):
+                    raise Exception( key + " – " + str(
+                                     getattr(self.countrylist, key ) ))
+
+
+if __name__ == "__main__":
+    test = CountryListUnitTest()
+    test.treat()
