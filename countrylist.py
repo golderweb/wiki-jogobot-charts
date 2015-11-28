@@ -67,7 +67,7 @@ class CountryList():
 
         # Check if page exits
         if not self.page.exists():
-            return False
+            return None
 
         # Initialise attributes
         __attr = (  "wikicode", "entry", "chartein", "_chartein_raw",
@@ -346,6 +346,23 @@ missing!" )
         else:
             raise CountryListEntryError( "Template Parameter 'Interpret' is \
 missing!" )
+
+    def __str__( self ):
+        """
+        Returns str repression for Object
+        """
+        if self.parsed:
+            return ("CountryList( Link = \"{link}\", Revid = \"{revid}\", " +
+                    "Interpret = \"{interpret}\", Titel = \"{titel}\", " +
+                    "Chartein = \"{chartein}\" )").format(
+                        link=repr(self.wikilink),
+                        revid=self.revid,
+                        interpret=self.interpret,
+                        titel=self.titel,
+                        chartein=repr(self.chartein))
+        else:
+            return "CountryList( Link = \"{link}\" )".format(
+                link=repr(self.wikilink))
 
 
 class CountryListError( Exception ):
