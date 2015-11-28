@@ -395,10 +395,30 @@ class CountryListUnitTest():
                     "titel": "El perdón",
                     "chartein": datetime( 2015, 9, 12 ) } )
 
-    def __init__( self ):
-        pass
+    def __init__( self, page=None ):
+        """
+        Constructor
+        Set attribute page
+        """
+        if page:
+            self.page_link = mwparser.nodes.Wikilink( page  )
+        else:
+            self.page_link = None
 
     def treat( self ):
+        """
+        Start testing either manually with page provided by cmd-arg page or
+        automatically with predefined test case
+        """
+        if self.page_link:
+            self.man_test()
+        else:
+            self.auto_test()
+
+    def auto_test( self ):
+        """
+        Run automatic tests with predefined test data from wiki
+        """
 
         for case in type(self).testcases:
 
@@ -420,7 +440,35 @@ class CountryListUnitTest():
                     raise Exception( key + " – " + str(
                                      getattr(self.countrylist, key ) ))
 
+    def man_test( self ):
+        """
+        Run manual test with page given in parameter
+        """
+        self.countrylist = CountryList( self.page_link )
+
+        self.countrylist.parse()
+
+        print( self.countrylist )
+        print( "Since we have no data to compare, you need to manually " +
+               "check data above against given page to ensure correct " +
+               "working of module!" )
+
+
+def main(*args):
+    """
+    Handling direct calls --> unittest
+    """
+    # Process global arguments to determine desired site
+    local_args = pywikibot.handle_args(args)
+
+    # Parse command line arguments
+    for arg in local_args:
+        if arg.startswith("-page:"):
+            page = arg[ len("-page:"): ]
+
+    # Call unittest-class
+    test = CountryListUnitTest( page )
+    test.treat()
 
 if __name__ == "__main__":
-    test = CountryListUnitTest()
-    test.treat()
+    main()
