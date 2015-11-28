@@ -25,6 +25,7 @@
 Provides a class for handling charts list per country and year
 """
 
+import re
 import locale
 from datetime import datetime
 
@@ -96,15 +97,15 @@ class CountryList():
 
     def find_year( self ):
         """
-        Try to find the year related to CountryList
+        Try to find the year related to CountryList using regex
         """
-        self.year = datetime.now().year
+        match = re.search( r"^.+\((\d{4})\)", self.page.title() )
 
-        # Check if year is in page.title, if not try last year
-        if str( self.year ) not in self.page.title():
-            self.year -= 1
-        # If last year does not match, raise YearError
-        if str( self.year ) not in self.page.title():
+        # We matched something
+        if match:
+            self.year = match.group()
+
+        else:
             raise CountryListError( "CountryList year is errorneous!" )
 
     def parse( self ):
