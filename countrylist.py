@@ -298,31 +298,10 @@ missing!" )
                 parts.append( word )
                 parts.append( " " )
 
-        # If we have indexes with out links, search for links
+        # If we have indexes without links, search for links
         if indexes:
 
-            # Iterate over wikilinks of refpage and try to find related links
-            for wikilink in self.wikicode.ifilter_wikilinks():
-
-                # Iterate over interpret names
-                for index in indexes:
-
-                    # Check wether wikilink matches
-                    if( parts[index] == wikilink.text or
-                        parts[index] == wikilink.title ):
-
-                            # Overwrite name with complete wikilink
-                            parts[index] = str( wikilink )
-
-                            # Remove index from worklist
-                            indexes.remove( index )
-
-                            # Other indexes won't also match
-                            break
-
-                # If worklist is empty, stop iterating over wikilinks
-                if not indexes:
-                    break
+            parts = self._search_links( parts, indexes )
 
             # Join the collected links
             sep = " "
@@ -342,6 +321,59 @@ missing!" )
         else:
             raise CountryListEntryError( "Template Parameter 'Interpret' is \
 missing!" )
+
+    def _search_links( self, keywords, indexes=None ):
+        """
+        Search matching wikilinks for keyword(s) in CountryList's wikicode
+
+        @param keywords: One or more keywords to search for
+        @type keywords: str, list
+        @param indexes: List with numeric indexes for items of keywords to work
+                        on only
+        @type indexes: list of ints
+        @return: List or String with replaced keywords
+        @return type: str, list
+        """
+
+        # Maybe convert keywords string to list
+        if( isinstance( keywords, str ) ):
+            keywords = [ keywords, ]
+            string = True
+        else:
+            string = False
+
+        # If indexes worklist was not provided, work on all elements
+        if not indexes:
+            indexes = range( len( keywords ) - 1 )
+
+        # Iterate over wikilinks of refpage and try to find related links
+        for wikilink in self.wikicode.ifilter_wikilinks():
+
+            # Iterate over interpret names
+            for index in indexes:
+
+                # Check wether wikilink matches
+                if( keywords[index] == wikilink.text or
+                    keywords[index] == wikilink.title ):
+
+                    # Overwrite name with complete wikilink
+                    keywords[index] = str( wikilink )
+
+                    # Remove index from worklist
+                    indexes.remove( index )
+
+                    # Other indexes won't also match
+                    break
+
+                # If worklist is empty, stop iterating over wikilinks
+                if not indexes:
+                    break
+
+        # Choose wether return list or string based on input type
+        if not string:
+            return keywords
+        else:
+            return keywords[0]
 
 
 class CountryListError( Exception ):
