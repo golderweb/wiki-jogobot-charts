@@ -244,7 +244,11 @@ missing!" )
         if not self._titel_raw:
             self.get_titel_value()
 
-        self.titel = self._titel_raw
+        # Try to find a wikilink for Titel on countrylist
+        if "[[" not in self._titel_raw:
+            self.titel = self._search_links( str(self._titel_raw) )
+        else:
+            self.titel = self._titel_raw
 
     def get_titel_value( self ):
         """
@@ -344,7 +348,7 @@ missing!" )
 
         # If indexes worklist was not provided, work on all elements
         if not indexes:
-            indexes = range( len( keywords ) - 1 )
+            indexes = list(range( len( keywords ) ))
 
         # Iterate over wikilinks of refpage and try to find related links
         for wikilink in self.wikicode.ifilter_wikilinks():
@@ -365,15 +369,15 @@ missing!" )
                     # Other indexes won't also match
                     break
 
-                # If worklist is empty, stop iterating over wikilinks
-                if not indexes:
-                    break
+            # If worklist is empty, stop iterating over wikilinks
+            if not indexes:
+                break
 
         # Choose wether return list or string based on input type
         if not string:
             return keywords
         else:
-            return keywords[0]
+            return str(keywords[0])
 
 
 class CountryListError( Exception ):
