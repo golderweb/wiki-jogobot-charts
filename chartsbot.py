@@ -40,6 +40,8 @@ The following parameters are supported:
 
 -always           If given, request for confirmation of edit is short circuited
                   Use for unattended run
+-force-reload     If given, countrylists will be always parsed regardless if
+                  needed or not
 """
 
 
@@ -61,10 +63,10 @@ class ChartsBot( ):
     """
     Bot which automatically updates a ChartsSummaryPage like
     [[Portal:Charts_und_Popmusik/Aktuelle_Nummer-eins-Hits]] by reading linked
-    CountryListsAn incomplete sample bot.
+    CountryLists
     """
 
-    def __init__( self, generator, always ):
+    def __init__( self, generator, always, force_reload ):
         """
         Constructor.
 
@@ -74,10 +76,16 @@ class ChartsBot( ):
         @param always: if True, request for confirmation of edit is short
                         circuited. Use for unattended run
         @type always: bool
+        @param force-reload: If given, countrylists will be always parsed
+                             regardless if needed or not
+        @type force-reload: bool
         """
 
         self.generator = generator
         self.always = always
+
+        # Force parsing of countrylist
+        self.force_reload = force_reload
 
         # Set the edit summary message
         self.site = pywikibot.Site()
@@ -102,7 +110,7 @@ class ChartsBot( ):
         ################################################################
 
         # Initialise and treat SummaryPageWorker
-        sumpage = SummaryPage( text )
+        sumpage = SummaryPage( text, self.force_reload )
         sumpage.treat()
 
         # Check if editing is needed and if so get new text
@@ -187,10 +195,16 @@ def main(*args):
     # If always is True, bot won't ask for confirmation of edit (automode)
     always = False
 
+    # If force_reload is True, bot will always parse Countrylist regardless of
+    # parsing is needed or not
+    force_reload = False
+
     # Parse command line arguments
     for arg in local_args:
         if arg.startswith("-always"):
             always = True
+        elif arg.startswith("-force-reload"):
+            force_reload = True
         else:
             genFactory.handleArg(arg)
 
@@ -200,7 +214,7 @@ def main(*args):
         # The preloading generator is responsible for downloading multiple
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
-        bot = ChartsBot(gen, always)
+        bot = ChartsBot(gen, always, force_reload)
         bot.run()
     else:
         pywikibot.showHelp()

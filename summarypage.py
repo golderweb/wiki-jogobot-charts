@@ -38,13 +38,23 @@ class SummaryPage():
     Handles summary page related actions
     """
 
-    def __init__( self, text ):
+    def __init__( self, text, force_reload=False ):
         """
         Create Instance
+
+        @param text: Page Text of summarypage
+        @type text: str
+        @param force-reload: If given, countrylists will be always parsed
+                             regardless if needed or not
+        @type force-reload: bool
+
         """
 
         # Parse Text with mwparser
         self.wikicode = mwparser.parse( text )
+
+        # Force parsing of countrylist
+        self.force_reload = force_reload
 
     def treat( self ):
         """
@@ -55,7 +65,9 @@ class SummaryPage():
         for entry in self.wikicode.filter_templates( matches="/Eintrag" ):
 
             # Instantiate SummaryPageEntry-object
-            summarypageentry = SummaryPageEntry( entry )
+            summarypageentry = SummaryPageEntry(entry,
+                                                force_reload=self.force_reload)
+
             # Treat SummaryPageEntry-object
             summarypageentry.treat()
 
@@ -85,12 +97,21 @@ class SummaryPageEntry():
 
     write_needed = False
 
-    def __init__( self, entry ):
+    def __init__( self, entry, force_reload=False ):
         """
         Constructor
+
+        @param entry: Entry template of summarypage entry
+        @type text: mwparser.template
+        @param force-reload: If given, countrylists will be always parsed
+                             regardless if needed or not
+        @type force-reload: bool
         """
         self.old_entry = SummaryPageEntryTemplate( entry )
         self.new_entry = SummaryPageEntryTemplate( )
+
+        # Force parsing of countrylist
+        self.force_reload = force_reload
 
     def treat( self ):
         """
@@ -134,9 +155,7 @@ class SummaryPageEntry():
         try:
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if( self.countrylist and
-                self.countrylist.is_parsing_needed( self.countrylist_revid )):
-                    self.countrylist.parse()
+            self.maybe_parse_countrylist()
 
         # Maybe fallback to last years list
         except CountryListError:
@@ -144,12 +163,25 @@ class SummaryPageEntry():
             self.countrylist_wikilink.title = link_title
             self.countrylist = CountryList( self.countrylist_wikilink )
 
-            if( self.countrylist and
-                self.countrylist.is_parsing_needed( self.countrylist_revid )):
-                    self.countrylist.parse()
+            self.maybe_parse_countrylist()
 
             if not self.countrylist:
                 raise SummaryPageEntryError( "CountryList does not exists!" )
+
+    def maybe_parse_countrylist( self ):
+        """
+        Parse countrylist if page-object exists and if parsing is needed or
+        param -force-reload is set
+        """
+
+        # Fast return if no countrylist-object
+        if not self.countrylist:
+            return
+
+        # Parse if needed or forced
+        if( self.countrylist.is_parsing_needed( self.countrylist_revid ) or
+            self.force_reload ):
+                self.countrylist.parse()
 
     def get_countrylist_wikilink( self ):
         """
@@ -250,8 +282,8 @@ class SummaryPageEntryTemplate():
         Creates Instance of Class for given mwparser.template object of
         SummmaryPageEntry Template. If no object was given create empty one.
 
-        @param    template_obj    mw.parser.template   Object of
-                                  SummmaryPageEntry Template
+        @param template_obj Object of SummmaryPageEntry Template
+        @type template_obj: mwparser.template
         """
 
         # Check if object was given
