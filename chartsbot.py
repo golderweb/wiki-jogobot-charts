@@ -94,6 +94,14 @@ class ChartsBot( ):
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
+        # provisional-onwiki-activation
+        page_active = pywikibot.Page( self.site, "Benutzer:JogoBot/active" )
+        text_active = page_active.get()
+
+        if "true" not in text_active.lower():
+            pywikibot.output( "Bot ist deaktiviert!" )
+            return False
+
     def run(self):
         """Process each page from the generator."""
         for page in self.generator:
@@ -215,7 +223,8 @@ def main(*args):
         # pages from the wiki simultaneously.
         gen = pagegenerators.PreloadingGenerator(gen)
         bot = ChartsBot(gen, always, force_reload)
-        bot.run()
+        if bot:
+            bot.run()
     else:
         pywikibot.showHelp()
 
