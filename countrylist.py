@@ -66,7 +66,8 @@ class CountryList():
 
         # Check if page exits
         if not self.page.exists():
-            return False
+            raise CountryListError( "CountryList " +
+                                    str(wikilink.title) + " does not exists!" )
 
         # Initialise attributes
         __attr = (  "wikicode", "entry", "chartein", "_chartein_raw",
