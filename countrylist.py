@@ -238,7 +238,15 @@ class CountryList():
         If param is not present raise Error
         """
         if self.entry.has( "Chartein" ):
-            self._chartein_raw = self.entry.get("Chartein").value.strip()
+            self._chartein_raw = self.entry.get("Chartein").value
+
+            # Remove possible ref-tags
+            for ref in self._chartein_raw.ifilter_tags(matches="ref"):
+                self._chartein_raw.remove( ref )
+
+            # Remove whitespace
+            self._chartein_raw = str(self._chartein_raw).strip()
+
         else:
             raise CountryListEntryError( "Template Parameter 'Chartein' is \
 missing!" )
@@ -264,7 +272,14 @@ missing!" )
         If param is not present raise Error
         """
         if self.entry.has( "Titel" ):
-            self._titel_raw = self.entry.get("Titel").value.strip()
+            self._titel_raw = self.entry.get("Titel").value
+
+            # Remove possible ref-tags
+            for ref in self._titel_raw.ifilter_tags(matches="ref"):
+                self._titel_raw.remove( ref )
+
+            # Remove whitespace
+            self._titel_raw = str(self._titel_raw).strip()
         else:
             raise CountryListEntryError( "Template Parameter 'Titel' is \
 missing!" )
@@ -329,7 +344,14 @@ missing!" )
         If param is not present raise Error
         """
         if self.entry.has( "Interpret" ):
-            self._interpret_raw = self.entry.get("Interpret").value.strip()
+            self._interpret_raw = self.entry.get("Interpret").value
+
+            # Remove possible ref-tags
+            for ref in self._interpret_raw.ifilter_tags(matches="ref"):
+                self._interpret_raw.remove( ref )
+
+            # Remove whitespace
+            self._interpret_raw = str(self._interpret_raw).strip()
         else:
             raise CountryListEntryError( "Template Parameter 'Interpret' is \
 missing!" )
