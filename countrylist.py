@@ -157,11 +157,18 @@ class CountryList():
         # For belgian list we need to select subsection of country
         belgian = self.detect_belgian()
 
-        if belgian:
-            singles_section = self.wikicode.get_sections(
-                matches=belgian )[0].get_sections( matches="Singles" )[0]
-        else:
-            singles_section = self.wikicode.get_sections(matches="Singles")[0]
+        # Select Singles-Section
+        # Catch Error if we have none
+        try:
+            if belgian:
+                singles_section = self.wikicode.get_sections(
+                    matches=belgian )[0].get_sections( matches="Singles" )[0]
+            else:
+                singles_section = self.wikicode.get_sections(
+                    matches="Singles" )[0]
+
+        except IndexError:
+            raise CountryListError( "No Singles-Section found!")
 
         # Since we have multiple categories in some countrys we need
         # to select the first wrapping template
