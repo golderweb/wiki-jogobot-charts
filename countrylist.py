@@ -66,7 +66,8 @@ class CountryList():
 
         # Check if page exits
         if not self.page.exists():
-            return False
+            raise CountryListError( "CountryList " +
+                                    str(wikilink.title) + " does not exists!" )
 
         # Initialise attributes
         __attr = (  "wikicode", "entry", "chartein", "_chartein_raw",
@@ -156,11 +157,18 @@ class CountryList():
         # For belgian list we need to select subsection of country
         belgian = self.detect_belgian()
 
-        if belgian:
-            singles_section = self.wikicode.get_sections(
-                matches=belgian )[0].get_sections( matches="Singles" )[0]
-        else:
-            singles_section = self.wikicode.get_sections(matches="Singles")[0]
+        # Select Singles-Section
+        # Catch Error if we have none
+        try:
+            if belgian:
+                singles_section = self.wikicode.get_sections(
+                    matches=belgian )[0].get_sections( matches="Singles" )[0]
+            else:
+                singles_section = self.wikicode.get_sections(
+                    matches="Singles" )[0]
+
+        except IndexError:
+            raise CountryListError( "No Singles-Section found!")
 
         # Since we have multiple categories in some countrys we need
         # to select the first wrapping template
@@ -230,7 +238,15 @@ class CountryList():
         If param is not present raise Error
         """
         if self.entry.has( "Chartein" ):
-            self._chartein_raw = self.entry.get("Chartein").value.strip()
+            self._chartein_raw = self.entry.get("Chartein").value
+
+            # Remove possible ref-tags
+            for ref in self._chartein_raw.ifilter_tags(matches="ref"):
+                self._chartein_raw.remove( ref )
+
+            # Remove whitespace
+            self._chartein_raw = str(self._chartein_raw).strip()
+
         else:
             raise CountryListEntryError( "Template Parameter 'Chartein' is \
 missing!" )
@@ -244,7 +260,11 @@ missing!" )
         if not self._titel_raw:
             self.get_titel_value()
 
-        self.titel = self._titel_raw
+        # Try to find a wikilink for Titel on countrylist
+        if "[[" not in self._titel_raw:
+            self.titel = self._search_links( str(self._titel_raw) )
+        else:
+            self.titel = self._titel_raw
 
     def get_titel_value( self ):
         """
@@ -252,7 +272,14 @@ missing!" )
         If param is not present raise Error
         """
         if self.entry.has( "Titel" ):
-            self._titel_raw = self.entry.get("Titel").value.strip()
+            self._titel_raw = self.entry.get("Titel").value
+
+            # Remove possible ref-tags
+            for ref in self._titel_raw.ifilter_tags(matches="ref"):
+                self._titel_raw.remove( ref )
+
+            # Remove whitespace
+            self._titel_raw = str(self._titel_raw).strip()
         else:
             raise CountryListEntryError( "Template Parameter 'Titel' is \
 missing!" )
@@ -298,31 +325,10 @@ missing!" )
                 parts.append( word )
                 parts.append( " " )
 
-        # If we have indexes with out links, search for links
+        # If we have indexes without links, search for links
         if indexes:
 
-            # Iterate over wikilinks of refpage and try to find related links
-            for wikilink in self.wikicode.ifilter_wikilinks():
-
-                # Iterate over interpret names
-                for index in indexes:
-
-                    # Check wether wikilink matches
-                    if( parts[index] == wikilink.text or
-                        parts[index] == wikilink.title ):
-
-                            # Overwrite name with complete wikilink
-                            parts[index] = str( wikilink )
-
-                            # Remove index from worklist
-                            indexes.remove( index )
-
-                            # Other indexes won't also match
-                            break
-
-                # If worklist is empty, stop iterating over wikilinks
-                if not indexes:
-                    break
+            parts = self._search_links( parts, indexes )
 
             # Join the collected links
             sep = " "
@@ -338,10 +344,70 @@ missing!" )
         If param is not present raise Error
         """
         if self.entry.has( "Interpret" ):
-            self._interpret_raw = self.entry.get("Interpret").value.strip()
+            self._interpret_raw = self.entry.get("Interpret").value
+
+            # Remove possible ref-tags
+            for ref in self._interpret_raw.ifilter_tags(matches="ref"):
+                self._interpret_raw.remove( ref )
+
+            # Remove whitespace
+            self._interpret_raw = str(self._interpret_raw).strip()
         else:
             raise CountryListEntryError( "Template Parameter 'Interpret' is \
 missing!" )
+
+    def _search_links( self, keywords, indexes=None ):
+        """
+        Search matching wikilinks for keyword(s) in CountryList's wikicode
+
+        @param keywords: One or more keywords to search for
+        @type keywords: str, list
+        @param indexes: List with numeric indexes for items of keywords to work
+                        on only
+        @type indexes: list of ints
+        @return: List or String with replaced keywords
+        @return type: str, list
+        """
+
+        # Maybe convert keywords string to list
+        if( isinstance( keywords, str ) ):
+            keywords = [ keywords, ]
+            string = True
+        else:
+            string = False
+
+        # If indexes worklist was not provided, work on all elements
+        if not indexes:
+            indexes = list(range( len( keywords ) ))
+
+        # Iterate over wikilinks of refpage and try to find related links
+        for wikilink in self.wikicode.ifilter_wikilinks():
+
+            # Iterate over interpret names
+            for index in indexes:
+
+                # Check wether wikilink matches
+                if( keywords[index] == wikilink.text or
+                    keywords[index] == wikilink.title ):
+
+                    # Overwrite name with complete wikilink
+                    keywords[index] = str( wikilink )
+
+                    # Remove index from worklist
+                    indexes.remove( index )
+
+                    # Other indexes won't also match
+                    break
+
+            # If worklist is empty, stop iterating over wikilinks
+            if not indexes:
+                break
+
+        # Choose wether return list or string based on input type
+        if not string:
+            return keywords
+        else:
+            return str(keywords[0])
 
 
 class CountryListError( Exception ):
