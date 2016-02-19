@@ -50,6 +50,8 @@ import locale
 import pywikibot
 from pywikibot import pagegenerators
 
+import jogobot
+
 from summarypage import SummaryPage
 
 # This is required for the text that is shown when you run this script
@@ -86,6 +88,9 @@ class ChartsBot( ):
 
         # Force parsing of countrylist
         self.force_reload = force_reload
+
+        # Output Information
+        jogobot.output( "Chartsbot invoked" )
 
         # Set the edit summary message
         self.site = pywikibot.Site()
@@ -126,7 +131,7 @@ class ChartsBot( ):
             text = sumpage.get_new_text()
 
         if not self.save(text, page, self.summary, False):
-            pywikibot.output(u'Page %s not saved.' % page.title(asLink=True))
+            jogobot.output(u'Page %s not saved.' % page.title(asLink=True))
 
     def load(self, page):
         """Load the text of the given page."""
@@ -134,11 +139,11 @@ class ChartsBot( ):
             # Load the page
             text = page.get()
         except pywikibot.NoPage:
-            pywikibot.output(u"Page %s does not exist; skipping."
-                             % page.title(asLink=True))
+            jogobot.output( u"Page %s does not exist; skipping."
+                            % page.title(asLink=True), "ERROR" )
         except pywikibot.IsRedirectPage:
-            pywikibot.output(u"Page %s is a redirect; skipping."
-                             % page.title(asLink=True))
+            jogobot.output( u"Page %s is a redirect; skipping."
+                            % page.title(asLink=True), "ERROR" )
         else:
             return text
         return None
@@ -154,11 +159,11 @@ class ChartsBot( ):
 
                 # Show the title of the page we're working on.
                 # Highlight the title in purple.
-                pywikibot.output( u"\n\n>>> \03{lightpurple}%s\03{default} <<<"
-                                  % page.title())
+                jogobot.output( u">>> \03{lightpurple}%s\03{default} <<<"
+                                % page.title())
                 # show what was changed
                 pywikibot.showDiff(page.get(), text)
-                pywikibot.output(u'Comment: %s' % comment)
+                jogobot.output(u'Comment: %s' % comment)
 
             if self.always or pywikibot.input_yn(
                     u'Do you want to accept these changes?',
@@ -169,17 +174,17 @@ class ChartsBot( ):
                     page.save(summary=comment or self.comment,
                               minor=minorEdit, botflag=botflag)
                 except pywikibot.LockedPage:
-                    pywikibot.output(u"Page %s is locked; skipping."
-                                     % page.title(asLink=True))
+                    jogobot.output( u"Page %s is locked; skipping."
+                                    % page.title(asLink=True), "ERROR" )
                 except pywikibot.EditConflict:
-                    pywikibot.output(
+                    jogobot.output(
                         u'Skipping %s because of edit conflict'
-                        % (page.title()))
+                        % (page.title()), "ERROR")
                 except pywikibot.SpamfilterError as error:
-                    pywikibot.output(
+                    jogobot.output(
                         u'Cannot change %s because of spam blacklist \
 entry %s'
-                        % (page.title(), error.url))
+                        % (page.title(), error.url), "ERROR")
                 else:
                     return True
         return False
