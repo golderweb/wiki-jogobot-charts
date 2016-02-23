@@ -143,11 +143,8 @@ class SummaryPageEntry():
         # Get current year
         current_year = datetime.now().year
 
-        # Store old link.title
-        link_title = self.countrylist_wikilink.title
-
         # If list is from last year, replace year
-        if (current_year - 1) in link_title:
+        if (current_year - 1) in self.countrylist_wikilink.title:
             self.countrylist_wikilink.title.replace( (current_year - 1),
                                                      current_year )
 
@@ -160,7 +157,11 @@ class SummaryPageEntry():
         # Maybe fallback to last years list
         except CountryListError:
 
-            self.countrylist_wikilink.title = link_title
+            # If list is from last year, replace year
+            if (current_year ) in self.countrylist_wikilink.title:
+                self.countrylist_wikilink.title.replace( current_year,
+                                                         (current_year - 1) )
+
             self.countrylist = CountryList( self.countrylist_wikilink )
 
             self.maybe_parse_countrylist()
