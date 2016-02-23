@@ -154,8 +154,8 @@ class ChartsBot( ):
         # only save if something was changed (and not just revision)
         if text != page.get():
 
-            # Show diff only in interactive mode
-            if not self.always:
+            # Show diff only in interactive mode or in verbose mode
+            if not self.always or pywikibot.config.verbose_output:
 
                 # Show the title of the page we're working on.
                 # Highlight the title in purple.
