@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8  -*-
 #
-#  chartsbot.py
+#  charts.py
 #
 #  original version by:
 #
