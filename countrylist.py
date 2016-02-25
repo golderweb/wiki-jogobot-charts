@@ -282,20 +282,6 @@ missing!" )
             for ref in self._titel_raw.ifilter_tags(matches="ref"):
                 self._titel_raw.remove( ref )
 
-            # Handle SortKeyName and SortKey
-            for template in self._titel_raw.ifilter_templates(
-                    matches="SortKey" ):
-
-                if template.name == "SortKeyName":
-                    titel = "[[" + template.get(1) + " " + template.get(2)
-                    if template.has(3):
-                        titel += "|" + template.get(3)
-                    titel += "]]"
-                    self._title_raw.replace( template, titel )
-                else:
-                    if template.has(2):
-                        self._title_raw.replace( template, template.get(2) )
-
             # Remove whitespace
             self._titel_raw = str(self._titel_raw).strip()
         else:
@@ -367,6 +353,45 @@ missing!" )
             # Remove possible ref-tags
             for ref in self._interpret_raw.ifilter_tags(matches="ref"):
                 self._interpret_raw.remove( ref )
+
+            # Handle SortKeyName and SortKey
+            for template in self._interpret_raw.ifilter_templates(
+                    matches="SortKey" ):
+
+                if template.name == "SortKeyName":
+                    # Differing Link-Destination is provided as param 3
+                    if template.has(3):
+                        # Construct link out of Template, Params:
+                        # 1 = Surname
+                        # 2 = Name
+                        # 3 = Link-Dest
+                        interpret_link = mwparser.nodes.wikilink.Wikilink(
+                            str(template.get(3).value),
+                            str(template.get(1).value) + " " +
+                            str(template.get(2).value) )
+
+                    # Default Link-Dest [[Surname Name]]
+                    else:
+                        interpret_link = mwparser.nodes.wikilink.Wikilink(
+                            str(template.get(1).value) + " " +
+                            str(template.get(2).value) )
+
+                    # Replace Template with link
+                    self._interpret_raw.replace( template, interpret_link )
+
+                # SortKey
+                else:
+                    # Replace SortKey with text from param 2 if present
+                    if template.has(2):
+                        self._interpret_raw.replace( template,
+                                                     template.get(2).value)
+                    # Else Remove SortKey (text should follow behind SortKey)
+                    else:
+                        self._interpret_raw.replace( template, None)
+
+                # Normally won't be needed as there should be only one
+                # SortKey-Temlate but ... its a wiki
+                break
 
             # Remove whitespace
             self._interpret_raw = str(self._interpret_raw).strip()
