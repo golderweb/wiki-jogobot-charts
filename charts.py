@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8  -*-
 #
-#  chartsbot.py
+#  charts.py
 #
 #  original version by:
 #
@@ -11,7 +11,7 @@
 #
 #  modified by:
 #
-#  Copyright 2015 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
+#  Copyright 2016 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -46,6 +46,8 @@ The following parameters are supported:
 
 
 import locale
+import os
+import sys
 
 import pywikibot
 from pywikibot import pagegenerators
@@ -98,14 +100,6 @@ class ChartsBot( ):
 
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
-
-        # provisional-onwiki-activation
-        page_active = pywikibot.Page( self.site, "Benutzer:JogoBot/active" )
-        text_active = page_active.get()
-
-        if "true" not in text_active.lower():
-            pywikibot.output( "Bot ist deaktiviert!" )
-            return False
 
     def run(self):
         """Process each page from the generator."""
@@ -199,43 +193,65 @@ def main(*args):
     @param args: command line arguments
     @type args: list of unicode
     """
-    # Process global arguments to determine desired site
-    local_args = pywikibot.handle_args(args)
 
-    # This factory is responsible for processing command line arguments
-    # that are also used by other scripts and that determine on which pages
-    # to work on.
-    genFactory = pagegenerators.GeneratorFactory()
-    # The generator gives the pages that should be worked upon.
-    gen = None
+    # Get the jogobot-task_slug (basename of current file without ending)
+    task_slug = os.path.basename(__file__)[:-len(".py")]
 
-    # If always is True, bot won't ask for confirmation of edit (automode)
-    always = False
+    # Before run, we need to check wether we are currently active or not
+    try:
+        # Will throw Exception if disabled/blocked
+        jogobot.is_active( task_slug )
 
-    # If force_reload is True, bot will always parse Countrylist regardless of
-    # parsing is needed or not
-    force_reload = False
+    except jogobot.jogobot.Blocked:
+        (type, value, traceback) = sys.exc_info()
+        jogobot.output( "\03{lightpurple} %s (%s)" % (value, type ),
+                        "CRITICAL" )
 
-    # Parse command line arguments
-    for arg in local_args:
-        if arg.startswith("-always"):
-            always = True
-        elif arg.startswith("-force-reload"):
-            force_reload = True
-        else:
-            genFactory.handleArg(arg)
+    except jogobot.jogobot.Disabled:
+        (type, value, traceback) = sys.exc_info()
+        jogobot.output( "\03{red} %s (%s)" % (value, type ),
+                        "ERROR" )
 
-    if not gen:
-        gen = genFactory.getCombinedGenerator()
-    if gen:
-        # The preloading generator is responsible for downloading multiple
-        # pages from the wiki simultaneously.
-        gen = pagegenerators.PreloadingGenerator(gen)
-        bot = ChartsBot(gen, always, force_reload)
-        if bot:
-            bot.run()
+    # Bot/Task is active
     else:
-        pywikibot.showHelp()
+        # Process global arguments to determine desired site
+        local_args = pywikibot.handle_args(args)
+
+        # This factory is responsible for processing command line arguments
+        # that are also used by other scripts and that determine on which pages
+        # to work on.
+        genFactory = pagegenerators.GeneratorFactory()
+        # The generator gives the pages that should be worked upon.
+        gen = None
+
+        # If always is True, bot won't ask for confirmation of edit (automode)
+        always = False
+
+        # If force_reload is True, bot will always parse Countrylist regardless
+        # if parsing is needed or not
+        force_reload = False
+
+        # Parse command line arguments
+        for arg in local_args:
+            if arg.startswith("-always"):
+                always = True
+            elif arg.startswith("-force-reload"):
+                force_reload = True
+            else:
+                pass
+                genFactory.handleArg(arg)
+
+        if not gen:
+            gen = genFactory.getCombinedGenerator()
+        if gen:
+            # The preloading generator is responsible for downloading multiple
+            # pages from the wiki simultaneously.
+            gen = pagegenerators.PreloadingGenerator(gen)
+            bot = ChartsBot(gen, always, force_reload)
+            if bot:
+                bot.run()
+        else:
+            pywikibot.showHelp()
 
 if( __name__ == "__main__" ):
     main()
