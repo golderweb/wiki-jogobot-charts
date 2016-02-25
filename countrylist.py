@@ -25,6 +25,7 @@
 Provides a class for handling charts list per country and year
 """
 
+import re
 import locale
 from datetime import datetime
 
@@ -97,21 +98,24 @@ class CountryList():
 
     def find_year( self ):
         """
-        Try to find the year related to CountryList
+        Try to find the year related to CountryList using regex
         """
-        self.year = datetime.now().year
+        match = re.search( r"^.+\((\d{4})\)", self.page.title() )
 
-        # Check if year is in page.title, if not try last year
-        if str( self.year ) not in self.page.title():
-            self.year -= 1
-        # If last year does not match, raise YearError
-        if str( self.year ) not in self.page.title():
+        # We matched something
+        if match:
+            self.year = match.group()
+
+        else:
             raise CountryListError( "CountryList year is errorneous!" )
 
     def parse( self ):
         """
         Handles the parsing process
         """
+
+        # Set revid
+        self.revid = self.page.latest_revision_id
 
         # Parse page with mwparser
         self.generate_wikicode()
@@ -423,6 +427,23 @@ missing!" )
         else:
             return str(keywords[0])
 
+    def __str__( self ):
+        """
+        Returns str repression for Object
+        """
+        if self.parsed:
+            return ("CountryList( Link = \"{link}\", Revid = \"{revid}\", " +
+                    "Interpret = \"{interpret}\", Titel = \"{titel}\", " +
+                    "Chartein = \"{chartein}\" )").format(
+                        link=repr(self.wikilink),
+                        revid=self.revid,
+                        interpret=self.interpret,
+                        titel=self.titel,
+                        chartein=repr(self.chartein))
+        else:
+            return "CountryList( Link = \"{link}\" )".format(
+                link=repr(self.wikilink))
+
 
 class CountryListError( Exception ):
     """
@@ -436,3 +457,98 @@ class CountryListEntryError( CountryListError ):
     Handles errors occuring in class CountryList related to entrys
     """
     pass
+
+
+class CountryListUnitTest():
+    """
+    Defines Test-Functions for CountryList-Module
+    """
+
+    testcases = ( { "Link": mwparser.nodes.Wikilink( "Benutzer:JogoBot/Charts/Tests/Liste der Nummer-eins-Hits in Frankreich (2015)" ),  # noqa
+                    "revid": 148453827,
+                    "interpret": "[[Adele (Sängerin)|Adele]]",
+                    "titel": "[[Hello (Adele-Lied)|Hello]]",
+                    "chartein": datetime( 2015, 10, 23 ) },
+                  { "Link": mwparser.nodes.Wikilink( "Benutzer:JogoBot/Charts/Tests/Liste der Nummer-eins-Hits in Belgien (2015)", "Wallonien"),  # noqa
+                    "revid": 148455281,
+                    "interpret": "[[Nicky Jam]] & [[Enrique Iglesias (Sänger)|Enrique Iglesias]]",  # noqa
+                    "titel": "El perdón",
+                    "chartein": datetime( 2015, 9, 12 ) } )
+
+    def __init__( self, page=None ):
+        """
+        Constructor
+        Set attribute page
+        """
+        if page:
+            self.page_link = mwparser.nodes.Wikilink( page  )
+        else:
+            self.page_link = None
+
+    def treat( self ):
+        """
+        Start testing either manually with page provided by cmd-arg page or
+        automatically with predefined test case
+        """
+        if self.page_link:
+            self.man_test()
+        else:
+            self.auto_test()
+
+    def auto_test( self ):
+        """
+        Run automatic tests with predefined test data from wiki
+        """
+
+        for case in type(self).testcases:
+
+            self.countrylist = CountryList( case["Link"] )
+
+            if( self.countrylist.is_parsing_needed( case["revid"] ) or not
+                self.countrylist.is_parsing_needed( case["revid"] + 1 ) ):
+                    raise Exception(
+                        "CountryList.is_parsing_needed() does not work!" )
+
+            self.countrylist.parse()
+
+            for key in case:
+
+                if key == "Link":
+                    continue
+
+                if not case[key] == getattr(self.countrylist, key ):
+                    raise Exception( key + " – " + str(
+                                     getattr(self.countrylist, key ) ))
+
+    def man_test( self ):
+        """
+        Run manual test with page given in parameter
+        """
+        self.countrylist = CountryList( self.page_link )
+
+        self.countrylist.parse()
+
+        print( self.countrylist )
+        print( "Since we have no data to compare, you need to manually " +
+               "check data above against given page to ensure correct " +
+               "working of module!" )
+
+
+def main(*args):
+    """
+    Handling direct calls --> unittest
+    """
+    # Process global arguments to determine desired site
+    local_args = pywikibot.handle_args(args)
+
+    # Parse command line arguments
+    for arg in local_args:
+        if arg.startswith("-page:"):
+            page = arg[ len("-page:"): ]
+
+    # Call unittest-class
+    test = CountryListUnitTest( page )
+    test.treat()
+
+if __name__ == "__main__":
+    main()
