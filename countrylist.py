@@ -278,6 +278,20 @@ missing!" )
             for ref in self._titel_raw.ifilter_tags(matches="ref"):
                 self._titel_raw.remove( ref )
 
+            # Handle SortKeyName and SortKey
+            for template in self._titel_raw.ifilter_templates(
+                    matches="SortKey" ):
+
+                if template.name == "SortKeyName":
+                    titel = "[[" + template.get(1) + " " + template.get(2)
+                    if template.has(3):
+                        titel += "|" + template.get(3)
+                    titel += "]]"
+                    self._title_raw.replace( template, titel )
+                else:
+                    if template.has(2):
+                        self._title_raw.replace( template, template.get(2) )
+
             # Remove whitespace
             self._titel_raw = str(self._titel_raw).strip()
         else:
