@@ -104,7 +104,7 @@ class CountryList():
 
         # We matched something
         if match:
-            self.year = match.group()
+            self.year = int(match.group(1))
 
         else:
             raise CountryListError( "CountryList year is errorneous!" )
