@@ -194,6 +194,9 @@ def main(*args):
     @type args: list of unicode
     """
 
+    # Process global arguments to determine desired site
+    local_args = pywikibot.handle_args(args)
+
     # Get the jogobot-task_slug (basename of current file without ending)
     task_slug = os.path.basename(__file__)[:-len(".py")]
 
@@ -214,9 +217,6 @@ def main(*args):
 
     # Bot/Task is active
     else:
-        # Process global arguments to determine desired site
-        local_args = pywikibot.handle_args(args)
-
         # This factory is responsible for processing command line arguments
         # that are also used by other scripts and that determine on which pages
         # to work on.
