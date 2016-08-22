@@ -103,14 +103,23 @@ class ChartsBot( ):
 
     def run(self):
         """Process each page from the generator."""
+        # Count skipped pages (redirect or missing)
+        skipped = 0
         for page in self.generator:
-            self.treat(page)
+            if not self.treat(page):
+                skipped += 1
+
+        if skipped:
+            jogobot.output( "Chartsbot finished, {skipped} page(s) skipped"
+                            .format( skipped=skipped ) )
+        else:
+            jogobot.output( "Chartsbot finished successfully" )
 
     def treat(self, page):
         """Load the given page, does some changes, and saves it."""
         text = self.load(page)
         if not text:
-            return
+            return False
 
         ################################################################
         # NOTE: Here you can modify the text in whatever way you want. #
@@ -127,6 +136,8 @@ class ChartsBot( ):
         if not self.save(text, page, self.summary, False):
             jogobot.output(u'Page %s not saved.' % page.title(asLink=True))
 
+        return True
+
     def load(self, page):
         """Load the text of the given page."""
         try:
@@ -140,7 +151,7 @@ class ChartsBot( ):
                             % page.title(asLink=True), "ERROR" )
         else:
             return text
-        return None
+        return False
 
     def save(self, text, page, comment=None, minorEdit=True,
              botflag=True):
