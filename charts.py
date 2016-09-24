@@ -94,9 +94,15 @@ class ChartsBot( ):
         # Output Information
         jogobot.output( "Chartsbot invoked" )
 
-        # Set the edit summary message
+        # Save pywikibot site object
         self.site = pywikibot.Site()
-        self.summary = "Bot: Aktualisiere Übersichtsseite Nummer-eins-Hits"
+
+        # Define edit summary
+        self.summary = jogobot.config["charts"]["edit_summary"].strip()
+
+        # Make sure summary starts with "Bot:"
+        if not self.summary[:len("Bot:")] == "Bot:":
+            self.summary = "Bot: " + self.summary.strip()
 
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
