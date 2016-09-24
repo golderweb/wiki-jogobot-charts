@@ -11,7 +11,7 @@
 #
 #  modified by:
 #
-#  Copyright 2016 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
+#  Copyright 2016 Jonathan Golder <jonathan@golderweb.de>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
