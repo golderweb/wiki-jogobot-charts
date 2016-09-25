@@ -3,7 +3,7 @@
 #
 #  countrylist.py
 #
-#  Copyright 2015 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
+#  Copyright 2016 Jonathan Golder <jonathan@golderweb.de>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@ from isoweek import Week
 
 import pywikibot
 import mwparserfromhell as mwparser
+
+import jogobot
 
 
 class CountryList():
@@ -130,6 +132,10 @@ class CountryList():
 
         # For easy detecting wether we have parsed self
         self.parsed = True
+
+        # Log parsed page
+        jogobot.output( "Parsed revision {revid} of page [[{title}]]".format(
+            revid=self.revid, title=self.page.title() ) )
 
     def detect_belgian( self ):
         """

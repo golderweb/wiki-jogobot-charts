@@ -11,7 +11,7 @@
 #
 #  modified by:
 #
-#  Copyright 2016 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
+#  Copyright 2016 Jonathan Golder <jonathan@golderweb.de>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -94,23 +94,38 @@ class ChartsBot( ):
         # Output Information
         jogobot.output( "Chartsbot invoked" )
 
-        # Set the edit summary message
+        # Save pywikibot site object
         self.site = pywikibot.Site()
-        self.summary = "Bot: Aktualisiere Übersichtsseite Nummer-eins-Hits"
+
+        # Define edit summary
+        self.summary = jogobot.config["charts"]["edit_summary"].strip()
+
+        # Make sure summary starts with "Bot:"
+        if not self.summary[:len("Bot:")] == "Bot:":
+            self.summary = "Bot: " + self.summary.strip()
 
         # Set locale to 'de_DE.UTF-8'
         locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
 
     def run(self):
         """Process each page from the generator."""
+        # Count skipped pages (redirect or missing)
+        skipped = 0
         for page in self.generator:
-            self.treat(page)
+            if not self.treat(page):
+                skipped += 1
+
+        if skipped:
+            jogobot.output( "Chartsbot finished, {skipped} page(s) skipped"
+                            .format( skipped=skipped ) )
+        else:
+            jogobot.output( "Chartsbot finished successfully" )
 
     def treat(self, page):
         """Load the given page, does some changes, and saves it."""
         text = self.load(page)
         if not text:
-            return
+            return False
 
         ################################################################
         # NOTE: Here you can modify the text in whatever way you want. #
@@ -127,6 +142,8 @@ class ChartsBot( ):
         if not self.save(text, page, self.summary, False):
             jogobot.output(u'Page %s not saved.' % page.title(asLink=True))
 
+        return True
+
     def load(self, page):
         """Load the text of the given page."""
         try:
@@ -140,7 +157,7 @@ class ChartsBot( ):
                             % page.title(asLink=True), "ERROR" )
         else:
             return text
-        return None
+        return False
 
     def save(self, text, page, comment=None, minorEdit=True,
              botflag=True):

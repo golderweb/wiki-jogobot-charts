@@ -3,7 +3,7 @@
 #
 #  summarypage.py
 #
-#  Copyright 2015 GOLDERWEB – Jonathan Golder <jonathan@golderweb.de>
+#  Copyright 2016 Jonathan Golder <jonathan@golderweb.de>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@ from datetime import datetime, timedelta
 
 # import pywikibot
 import mwparserfromhell as mwparser
+
+import jogobot
 
 from countrylist import CountryList, CountryListError
 
@@ -145,6 +147,9 @@ class SummaryPageEntry():
 
         # If list is from last year, replace year
         if (current_year - 1) in self.countrylist_wikilink.title:
+            jogobot.output( "Trying to use new years list for [[{page}]]"
+                            .format( page=self.countrylist_wikilink.title ) )
+
             self.countrylist_wikilink.title.replace( (current_year - 1),
                                                      current_year )
 
@@ -159,6 +164,10 @@ class SummaryPageEntry():
 
             # If list is from last year, replace year
             if (current_year ) in self.countrylist_wikilink.title:
+                jogobot.output( "New years list for [[{page}]] does not " +
+                                "exist, fall back to old list!".format(
+                                    page=self.countrylist_wikilink.title ) )
+
                 self.countrylist_wikilink.title.replace( current_year,
                                                          (current_year - 1) )
 
