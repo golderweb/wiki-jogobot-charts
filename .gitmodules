@@ -1,3 +1,4 @@
 [submodule "jogobot"]
-	path = jogobot
-	url = ../jogobot
+    path = jogobot
+    url = git@github.com:golderweb/wiki-jogobot-core.git
+    branch = test-v1
